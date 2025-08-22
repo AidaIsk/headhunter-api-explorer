@@ -9,15 +9,14 @@ services:
       POSTGRES_PASSWORD: pass
       POSTGRES_DB: mydb
     ports:
-      - "5433:5432"
+      - "${PG_HOST_PORT:-5433}:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
 
   adminer:
     image: adminer
-    container_name: adminer
     ports:
-      - "8080:8080"
+      - "${ADMINER_HOST_PORT:-8080}:8080"
 
 volumes:
   pg_data:
