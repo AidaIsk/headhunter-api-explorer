@@ -22,3 +22,12 @@ pg_data/
 # OS
 .DS_Store
 Thumbs.db
+
+# test
+manual_test_funct/
+
+# выгрузка в папку
+# игнорируем все файлы внутри data
+data/*
+# но оставляем .gitkeep
+!data/.gitkeep
