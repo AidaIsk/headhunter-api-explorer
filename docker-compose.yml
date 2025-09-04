@@ -47,6 +47,7 @@ services:
       - "${AIRFLOW_PORT}:8080"
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./dags/data:/opt/airflow/dags/data
       - ./logs:/opt/airflow/logs
     command: webserver
 
@@ -67,6 +68,7 @@ services:
       - airflow-init
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./dags/data:/opt/airflow/dags/data
       - ./logs:/opt/airflow/logs
     command: scheduler
 
