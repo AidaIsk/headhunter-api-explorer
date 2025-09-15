@@ -72,6 +72,20 @@ services:
       - ./logs:/opt/airflow/logs
     command: scheduler
 
+  minio:
+    image: minio/minio
+    container_name: minio
+    ports:
+      - "9000:9000"  # доступ к S3 API
+      - "9001:9001"  # доступ к веб-консоли
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - ./minio_data:/data
+
+
   adminer:
     image: adminer
     ports:
@@ -81,7 +95,7 @@ services:
 
 volumes:
   pg_data:
-
+  minio_data:
 
 
     

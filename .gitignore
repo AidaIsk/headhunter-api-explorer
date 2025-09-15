@@ -23,6 +23,9 @@ pg_data/
 .DS_Store
 Thumbs.db
 
+# minio
+minio_data/
+
 # test
 manual_test_funct/
 
