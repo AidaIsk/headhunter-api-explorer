@@ -12,6 +12,7 @@ Adminer добавлен для удобного доступа к базе да
 - **Airflow Scheduler** (выполняет DAG-и)  
 - **Postgres** → база данных для Airflow и ваших DAG-ов  
 - **Adminer** → [http://localhost:8091](http://localhost:8091) (UI для Postgres)
+- **MINIO** →  объектное хранилище - запись данных в S3 [http://localhost:9001]
 
 ---
 
