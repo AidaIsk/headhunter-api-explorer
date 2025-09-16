@@ -1,34 +1,25 @@
-from airflow import DAG
-from airflow.operators.python import PythonOperator
+import os, io
+from minio import Minio
 from datetime import datetime
-import pandas as pd
 
+ENDPOINT = os.environ["MINIO_ENDPOINT"]
+ACCESS   = os.environ["MINIO_ACCESS_KEY"]
+SECRET   = os.environ["MINIO_SECRET_KEY"]
+BUCKET   = os.environ["MINIO_BUCKET"]
 
-def make_and_save_csv():
-    # 1. Создаём простую таблицу
+def upload_df_to_minio():
     df = pd.DataFrame({
-        "id": [1, 2, 3],
-        "name": ["Alice", "Bob", "Charlie"],
-        "role": ["Data Engineer", "Analyst", "ML Engineer"]
+        "id":[1,2,3],
+        "name":["Alice","Bob","Charlie"],
+        "role":["Data Engineer","Analyst","ML Engineer"]
     })
+    csv_bytes = df.to_csv(index=False).encode("utf-8")
+    stream = io.BytesIO(csv_bytes)
 
-    # 2. Сохраняем файл в папку MinIO 
-    path = "/test-bucket/pandas_test.csv"
-    df.to_csv(path, index=False)
+    client = Minio(ENDPOINT, access_key=ACCESS, secret_key=SECRET, secure=False)
+    if not client.bucket_exists(BUCKET):
+        client.make_bucket(BUCKET)
 
-    print(f"✅ CSV сохранён: {path}")
-
-
-# Определение DAG
-with DAG(
-    dag_id="minio_pandas_dag",
-    start_date=datetime(2023, 1, 1),
-    schedule_interval=None,   
-    catchup=False,
-    tags=["test", "minio", "pandas"],
-) as dag:
-
-    save_csv = PythonOperator(
-        task_id="save_csv_with_pandas",
-        python_callable=make_and_save_csv,
-    )
+    key = f"test/{datetime.now():%Y/%m/%d}/pandas_test_{datetime.now():%H%M%S}.csv"
+    client.put_object(BUCKET, key, stream, length=len(csv_bytes), content_type="text/csv")
+    print(f"✅ uploaded: s3://{BUCKET}/{key}")
