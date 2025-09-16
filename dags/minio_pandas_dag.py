@@ -13,7 +13,7 @@ def make_and_save_csv():
     })
 
     # 2. Сохраняем файл в папку MinIO 
-    path = "/data/pandas_test.csv"
+    path = "/test-bucket/pandas_test.csv"
     df.to_csv(path, index=False)
 
     print(f"✅ CSV сохранён: {path}")
