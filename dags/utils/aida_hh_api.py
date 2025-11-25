@@ -11,7 +11,10 @@ RATE_LIMIT_SLEEP = 2                          # пауза между запро
 
 BASE_PARAMS = {
     "area": 40,                                 # 40 = Казахстан
-    "text": '"python" AND "sql"'                # вакансии, где встречаются оба слова
+    "text": '"data engineer" OR "инженер данных" OR "etl" OR "dwh"' 
+            'OR "аналитик данных" OR "data analyst"'
+            'OR "bi" OR "power bi" OR "sql"'
+            'OR "ml" OR "machine learning" OR "ml engineer"'               # вакансии, где встречаются слова
 }
 
 # Заголовки HTTP-запроса (HH требует указать User-Agent)
