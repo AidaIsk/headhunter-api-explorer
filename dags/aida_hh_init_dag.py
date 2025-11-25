@@ -18,7 +18,7 @@ with DAG(
     tags=["aida", "hh", "init"],
 ) as dag:
     
-    collect_init_csv = PythonOperartor(
+    collect_init_csv = PythonOperator(
         task_id="collect_hh_init_csv",
         python_callable=pipeline_hh_to_csv,
         op_kwargs={
