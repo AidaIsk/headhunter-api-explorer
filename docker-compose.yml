@@ -25,8 +25,14 @@ services:
     depends_on:
       - postgres
     command: >
-          sh -c "airflow db init && airflow users create --username ${AIRFLOW_USER} --password ${AIRFLOW_PASSWORD} --firstname Admin --lastname User --role Admin --email ${AIRFLOW_EMAIL}"
-      
+      sh -c "airflow db init &&
+             airflow users create
+               --username ${AIRFLOW_USER}
+               --password ${AIRFLOW_PASSWORD}
+               --firstname Admin
+               --lastname User
+               --role Admin
+               --email ${AIRFLOW_EMAIL}"
 
   airflow-webserver:
     build:
@@ -37,9 +43,19 @@ services:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       AIRFLOW__WEBSERVER__SECRET_KEY: "supersecretkey"
+
+      # Логи Airflow
       AIRFLOW__CORE__BASE_LOG_FOLDER: /opt/airflow/logs
       AIRFLOW__CORE__DAG_PROCESSOR_MANAGER_LOG_LOCATION: /opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
       AIRFLOW__LOGGING__LOGGING_LEVEL: INFO
+
+      # 🔽 Настройки для слабого ноутбука
+      AIRFLOW__WEBSERVER__WEB_SERVER_WORKERS: 1
+      AIRFLOW__WEBSERVER__WEB_SERVER_WORKER_TIMEOUT: 300
+      AIRFLOW__WEBSERVER__WEB_SERVER_MASTER_TIMEOUT: 300
+      AIRFLOW__WEBSERVER__WEB_SERVER_PRELOAD: "False"
+
+      # MinIO
       MINIO_ENDPOINT: ${MINIO_ENDPOINT}
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
@@ -68,6 +84,7 @@ services:
       AIRFLOW__CORE__BASE_LOG_FOLDER: /opt/airflow/logs
       AIRFLOW__CORE__DAG_PROCESSOR_MANAGER_LOG_LOCATION: /opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
       AIRFLOW__LOGGING__LOGGING_LEVEL: INFO
+
       MINIO_ENDPOINT: ${MINIO_ENDPOINT}
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
@@ -86,15 +103,14 @@ services:
     image: minio/minio
     container_name: minio
     ports:
-      - "9000:9000"  # доступ к S3 API
-      - "9001:9001"  # доступ к веб-консоли
+      - "9000:9000"   # доступ к S3 API
+      - "9001:9001"   # доступ к веб-консоли
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     command: server /data --console-address ":9001"
     volumes:
       - ./minio_data:/data
-
 
   adminer:
     image: adminer
@@ -107,5 +123,3 @@ volumes:
   pg_data:
   minio_data:
 
-
-    
