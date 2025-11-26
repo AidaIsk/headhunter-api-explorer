@@ -71,5 +71,5 @@ with DAG(
     load_task = PythonOperator(
         task_id="load_to_csv_init",
         python_callable=initial_load,
-        op_args=["2025-09-01", "2025-09-10"]
+        op_args=["2025-11-16", "2025-11-25"]
     )
