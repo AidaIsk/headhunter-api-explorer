@@ -13,7 +13,13 @@ def upload_df_to_minio():
     df = pd.DataFrame({"id":[1,2,3],"name":["Alice","Bob","Charlie"]})
     csv_bytes = df.to_csv(index=False).encode("utf-8")
     stream = io.BytesIO(csv_bytes)
-    client = Minio(MINIO_ENDPOINT, access_key=MINIO_ACCESS, secret_key=MINIO_SECRET, secure=False)
+    client = Minio(
+        endpoint=MINIO_ENDPOINT,
+        access_key=MINIO_ACCESS,
+        secret_key=MINIO_SECRET,
+        secure=False,
+    )
+
     if not client.bucket_exists(MINIO_BUCKET):
         client.make_bucket(MINIO_BUCKET)
     key = f"test/{datetime.now():%Y/%m/%d}/pandas_{datetime.now():%H%M%S}.csv"
