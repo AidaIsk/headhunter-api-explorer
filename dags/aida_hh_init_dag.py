@@ -26,4 +26,4 @@ with DAG(
         },
     )
 
-collect_init_csv
+    collect_init_csv
