@@ -22,9 +22,16 @@ def upload_df_to_minio():
 
     if not client.bucket_exists(bucket_name=MINIO_BUCKET):
         client.make_bucket(bucket_name=MINIO_BUCKET)
-        
+
     key = f"test/{datetime.now():%Y/%m/%d}/pandas_{datetime.now():%H%M%S}.csv"
-    client.put_object(MINIO_BUCKET, key, stream, length=len(csv_bytes), content_type="text/csv")
+    client.put_object(
+        bucket_name=MINIO_BUCKET,
+        object_name=key,
+        data=stream,
+        length=len(csv_bytes),
+        content_type="text/csv",
+    )
+
     print(f"✅ uploaded: s3://{MINIO_BUCKET}/{key}")
 
 with DAG(
