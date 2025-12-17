@@ -1,20 +1,22 @@
 import time
 import requests
-import pandas as pd
 from typing import List, Dict, Any
+import os
 from botocore.exceptions import NoCredentialsError  
+import json
+from pathlib import Path
+import boto3
+
+
 
 # Настройки API и фильтров
 
 BASE_URL = "https://api.hh.ru/vacancies"  
 PAGE_SIZE = 100                               # сколько записей на странице
 RATE_LIMIT_SLEEP = 2                          # пауза между запросами (секунды)
-minio_bucket = os.getenv("MINIO_BUCKET")
-folder = "bronze/"
+
 
 def get_s3_client():
-    import os
-    import boto3
 
     return boto3.client('s3',
                         aws_access_key_id = os.getenv("MINIO_ACCESS_KEY"),
@@ -115,12 +117,29 @@ def pipeline_hh_to_bronze_json(ds: str, **context):
 
     items = fetch_all_items()
 
-    try:  
-        s3_client.put_object(Bucket=minio_bucket, Key = folder, Body=b"")  
-        print(f"Folder '{folder}' created in bucket '{minio_bucket}'")  
-    except NoCredentialsError:  
-        print("Invalid AWS credentials provided")
+    local_path = f"/tmp/vacancies_{ds}.jsonl"
+    Path("/tmp").mkdir(parents=True, exist_ok=True)
+    
+    with open(local_path, "w", encoding="utf-8") as f:
+        for item in items:
+            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+
+    minio_bucket = os.getenv("MINIO_BUCKET")
+    s3_client = get_s3_client()
+
+    object_key = f"bronze/hh/vacancies/dt={ds}/vacancies.jsonl"
+    print(f"ds = {ds}")
+    print(f"items count = {len(items)}")
+    print(f"MINIO_BUCKET = {minio_bucket}")
+    print(f"object_key = {object_key}")
+    s3_client.head_bucket(Bucket=minio_bucket)
+
+    s3_client.upload_file(local_path, minio_bucket, object_key)  
+    
+    print(f"✅ Uploaded to s3://{minio_bucket}/{object_key}")
+    print(f"local_path = {local_path}, bytes = {os.path.getsize(local_path)}")
+
 
         
-    return items
+    return f"s3://{minio_bucket}/{object_key}"
 
