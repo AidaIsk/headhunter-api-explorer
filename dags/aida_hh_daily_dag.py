@@ -2,7 +2,7 @@ from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 
-from utils.aida_hh_api import pipeline_hh_to_csv
+from utils.test_api_json_minio import pipeline_hh_to_bronze_json
 
 default_args = {
     "owner" : "aida",
@@ -10,7 +10,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id="aida_hh_daily_csv",
+    dag_id="aida_hh_daily_json",
     default_args=default_args,
     start_date=datetime(2024, 1, 1),
     schedule_interval="@daily",
@@ -18,11 +18,11 @@ with DAG(
     tags=["aida", "hh", "daily"],
 ) as dag:
     
-    collect_daily_csv = PythonOperator(
-        task_id="collect_hh_daily_csv",
-        python_callable=pipeline_hh_to_csv,
+    collect_bronze_json = PythonOperator(
+        task_id="collect_hh_bronze_json",
+        python_callable=pipeline_hh_to_bronze_json,
         op_kwargs={
-            "output_path": "/opt/airflow/dags/data/aida_hh_{{ ds }}.csv",
+            "ds": "{{ ds }}",
         },
     )
 
