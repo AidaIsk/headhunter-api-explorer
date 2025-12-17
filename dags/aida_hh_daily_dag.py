@@ -2,7 +2,7 @@ from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 
-from utils.test_api_json_minio import pipeline_hh_to_bronze_json
+from utils.aida_hh_minio import pipeline_hh_to_bronze_json
 
 default_args = {
     "owner" : "aida",
