@@ -26,4 +26,4 @@ with DAG(
         },
     )
 
-    collect_daily_csv
+    collect_bronze_json
