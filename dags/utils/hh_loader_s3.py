@@ -12,7 +12,7 @@ class HHVacanciesLoader:
     HEADERS = {"User-Agent": "Mozilla/5.0"}
 
     CSV_PATH = "/opt/airflow/dags/data/hh_vacancies.csv"
-    S3_BUCKET = "dev"
+    S3_BUCKET = "hh_raw"
     S3_PREFIX = "Nataliia_Tarasova/hh_vacancies"
 
     KEYWORDS = [
