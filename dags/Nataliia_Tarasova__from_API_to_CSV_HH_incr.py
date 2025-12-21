@@ -1,5 +1,9 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+import requests
+import logging
+from airflow.models import Variable
+from airflow.utils.trigger_rule import TriggerRule
 
 import pandas as pd
 from datetime import datetime, time
@@ -33,7 +37,52 @@ doc_md = doc_md = """
 ### Таски
 - **load_to_csv_incr** — основной таск, выполняющий инкрементальную загрузку вакансий и дозапись в CSV
 """
+def send_telegram_message(**context):
+    try:
+        telegram_token = Variable.get('TG_BOT_TOKEN')
+        chat_id = Variable.get('TG_BOT_CHAT_ID')
 
+        dag_id = context['dag'].dag_id
+        ti = context["dag_run"].get_task_instance("load_to_csv_incr")
+
+        state = ti.state if ti else "unknown"
+
+        if state == "success":
+            status = "✅ *SUCCESS*"
+            severity = "info"
+        else:
+            status = "❌ *FAILED*"
+            severity = "critical"
+
+        message = f"""
+🔥 *Airflow Alert* 🔥
+
+*DAG:* `{dag_id}`
+*Task:* `load_to_csv_incr`
+*Status:* {status}
+
+*Severity:* {severity.upper()}
+*Run ID:* `{ti.run_id if ti else 'N/A'}`
+
+🕒 {ti.end_date.strftime('%Y-%m-%d %H:%M:%S') if ti and ti.end_date else 'N/A'}
+        """
+
+        url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
+        resp = requests.post(
+            url,
+            json={
+                "chat_id": chat_id,
+                "text": message,
+                "parse_mode": "Markdown"
+            },
+            timeout=10
+        )
+
+        if resp.status_code != 200:
+            logging.error(f"Telegram error: {resp.text}")
+
+    except Exception as e:
+        logging.error(f"Failed to send Telegram message: {e}")
 
 def incremental_load(**context):
     start_date = datetime.combine(datetime.strptime(context['ds'], "%Y-%m-%d").date(), time(0, 0, 0))
@@ -71,3 +120,11 @@ with DAG(
         task_id="load_to_csv_incr",
         python_callable=incremental_load
     )
+
+    telegram_notify = PythonOperator(
+        task_id="send_telegram_notification",
+        python_callable=send_telegram_message,
+        trigger_rule=TriggerRule.ALL_DONE  # важно!
+    )
+
+    load_task >> telegram_notify
