@@ -1,0 +1,36 @@
+profiles:
+
+  - profile_id: P1_payments
+    text: >
+      ("payments" OR "acquiring" OR "psp" OR "merchant"
+       OR "payment agent" OR "wallet"
+       OR "платежи" OR "эквайринг" OR "платежный агент" OR "кошелек")
+    why: >
+      Вакансии, связанные с платежами и процессингом.
+      Часто попадают под финансовое регулирование и могут быть связаны
+      с рисками ПОД/ФТ, нелегальными платежами или обходом требований.
+    expected_risk_category: payments
+    enabled: true
+
+  - profile_id: P2_crypto
+    text: >
+      ("crypto" OR "cryptocurrency" OR "exchange" OR "p2p"
+       OR "arbitrage" OR "trader"
+       OR "крипто" OR "криптовалюта" OR "обменник"
+       OR "арбитраж" OR "p2p")
+    why: >
+      Криптовалютные вакансии потенциально связаны с повышенными AML- и
+      санкционными рисками, включая нерегулируемую деятельность,
+      анонимные транзакции и трансграничные операции.
+    expected_risk_category: crypto
+    enabled: true
+
+  - profile_id: P3_gambling
+    text: >
+      ("gambling" OR "casino" OR "betting" OR "sportsbook"
+       OR "казино" OR "ставки" OR "букмекер")
+    why: >
+      Индустрия азартных игр относится к высокорисковым секторам
+      с точки зрения ПОД/ФТ, источников средств и требований регуляторов.
+    expected_risk_category: gambling
+    enabled: true
