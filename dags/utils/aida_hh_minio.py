@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import boto3
 
+from utils.search_profiles import load_enabled_search_profiles
 
 
 # Настройки API и фильтров
@@ -26,11 +27,7 @@ def get_s3_client():
                     )
 
 BASE_PARAMS = {
-    "area": 40,                                 # 40 = Казахстан
-    "text": '"data engineer" OR "инженер данных" OR "etl" OR "dwh"' 
-            'OR "аналитик данных" OR "data analyst"'
-            'OR "bi" OR "power bi" OR "sql"'
-            'OR "ml" OR "machine learning" OR "ml engineer"'               # вакансии, где встречаются слова
+    "area": 40,                                 # Казахстан — пилотный регион
 }
 
 # Заголовки HTTP-запроса (HH требует указать User-Agent)
@@ -38,13 +35,13 @@ HEADERS =  {"User-Agent": "hh-remote-track/0.1 (aida.aitymova@gmail.com)"}
 
 # Запрос одной страницы API
 
-def fetch_page(page: int) -> Dict[str, Any]:
+def fetch_page(page: int, params: Dict[str, Any]) -> Dict[str, Any]:
     """
     Отправляет запрос на HH API и возвращает JSON.
     Если запрос упал — возвращает пустой словарь, чтобы не ломать программу.
     """
     params = {
-        **BASE_PARAMS,                      # фильтры вакансий
+        **params,                      # фильтры вакансий
         "page": page,                       # номер страницы
         "per_page": PAGE_SIZE,              # сколько записей на странице
     }
@@ -73,7 +70,7 @@ def extract_items_from_response(response_json: Dict[str, Any]) -> List[Dict[str,
 
 # Запрос нескольких страниц (пагинация)
 
-def fetch_all_items(max_pages: int = 19) -> List[Dict[str, Any]]:
+def fetch_all_items(params: Dict[str, Any], max_pages: int = 19) -> List[Dict[str, Any]]:
     """
     Обходит страницы API по очереди: page=0, 1, 2, ...
     Останавливается, если:
@@ -87,7 +84,7 @@ def fetch_all_items(max_pages: int = 19) -> List[Dict[str, Any]]:
     # основной цикл пагинации
     while page <= max_pages:
 
-        response_json = fetch_page(page)
+        response_json = fetch_page(page, params)
         items = extract_items_from_response(response_json)
 
         # если данных нет — дальше страниц нет
@@ -114,8 +111,22 @@ def pipeline_hh_to_bronze_json(ds: str, load_type: str = "daily", **context):
     Главная функция для Airflow: скачивает вакансии,
     преобразует и сохраняет в CSV.
     """
+    enabled_profiles = load_enabled_search_profiles()
+    items = []
 
-    items = fetch_all_items()
+    for profile in enabled_profiles:
+        print(profile["profile_id"], len(profile_items))
+
+        params = {**BASE_PARAMS, "text": profile["text"]}
+        profile_items = fetch_all_items(params)
+
+        for item in profile_items:
+            item["search_profile"] = profile["profile_id"]
+            item["expected_risk_category"] = profile["expected_risk_category"]
+            item["load_dt"] = ds
+            item["load_type"] = load_type
+
+        items.extend(profile_items)
 
     local_path = f"/tmp/vacancies_{ds}.jsonl"
     Path("/tmp").mkdir(parents=True, exist_ok=True)
@@ -127,8 +138,8 @@ def pipeline_hh_to_bronze_json(ds: str, load_type: str = "daily", **context):
     minio_bucket = os.getenv("MINIO_BUCKET")
     s3_client = get_s3_client()
 
-    BRONZE_BASE_PREFIX = f'bronze/hh/vacancies'
-    object_key = f"{BRONZE_BASE_PREFIX}/load_type={load_type}/dt={ds}/vacancies.jsonl"
+    BRONZE_BASE_PREFIX = f'bronze/hh/vacancies_list'
+    object_key = f"{BRONZE_BASE_PREFIX}/load_type={load_type}/dt={ds}/part-000.jsonl"
     print(f"ds = {ds}")
     print(f"items count = {len(items)}")
     print(f"MINIO_BUCKET = {minio_bucket}")
