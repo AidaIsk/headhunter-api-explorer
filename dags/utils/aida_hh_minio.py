@@ -108,7 +108,7 @@ def fetch_all_items(max_pages: int = 19) -> List[Dict[str, Any]]:
 # Преобразование списка JSON → DataFrame
 
 
-def pipeline_hh_to_bronze_json(ds: str, prefix: str = "hh", **context):
+def pipeline_hh_to_bronze_json(ds: str, load_type: str = "daily", **context):
 
     """
     Главная функция для Airflow: скачивает вакансии,
@@ -127,7 +127,8 @@ def pipeline_hh_to_bronze_json(ds: str, prefix: str = "hh", **context):
     minio_bucket = os.getenv("MINIO_BUCKET")
     s3_client = get_s3_client()
 
-    object_key = f"bronze/{prefix}/hh/vacancies/dt={ds}/vacancies.jsonl"
+    BRONZE_BASE_PREFIX = f'bronze/hh/vacancies'
+    object_key = f"{BRONZE_BASE_PREFIX}/load_type={load_type}/dt={ds}/vacancies.jsonl"
     print(f"ds = {ds}")
     print(f"items count = {len(items)}")
     print(f"MINIO_BUCKET = {minio_bucket}")

@@ -74,6 +74,7 @@ with DAG(
         python_callable=pipeline_hh_to_bronze_json,
         op_kwargs={
             "ds": "{{ ds }}",
+            "load_type": "daily"
         },
     )
     telegram_notify_task = PythonOperator(

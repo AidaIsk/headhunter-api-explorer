@@ -22,8 +22,8 @@ with DAG(
         task_id="collect_init_bronze_json",
         python_callable=pipeline_hh_to_bronze_json,
         op_kwargs={
-            "ds":"{{ds}}",
-            "prefix":"hh_init",
+            "ds": "{{ ds }}",
+            "load_type": "init",
         },
     )
 
