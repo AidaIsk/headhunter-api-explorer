@@ -6,7 +6,7 @@ def load_enabled_search_profiles():
     Загружает search_profiles.yaml и возвращает
     только профили с enabled = true
     """
-    config_path = Path("configs/search_profiles.yaml")
+    config_path = Path("/opt/airflow/configs/search_profiles.yaml")
 
     with open(config_path, "r", encoding="UTF-8") as file:
         data = yaml.safe_load(file)
