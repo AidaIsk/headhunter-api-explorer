@@ -115,10 +115,10 @@ def pipeline_hh_to_bronze_json(ds: str, load_type: str = "daily", **context):
     items = []
 
     for profile in enabled_profiles:
-        print(profile["profile_id"], len(profile_items))
-
         params = {**BASE_PARAMS, "text": profile["text"]}
         profile_items = fetch_all_items(params)
+
+        print(profile["profile_id"], len(profile_items))
 
         for item in profile_items:
             item["search_profile"] = profile["profile_id"]
@@ -127,6 +127,7 @@ def pipeline_hh_to_bronze_json(ds: str, load_type: str = "daily", **context):
             item["load_type"] = load_type
 
         items.extend(profile_items)
+
 
     local_path = f"/tmp/vacancies_{ds}.jsonl"
     Path("/tmp").mkdir(parents=True, exist_ok=True)
