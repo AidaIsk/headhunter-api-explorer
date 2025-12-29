@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS hh_vacancies_bronze (
 
     url TEXT,
     alternate_url TEXT,
-    relations ARRAY,
+    relations JSONB,
 
     employer JSONB,
     snippet JSONB,
