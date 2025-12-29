@@ -1,0 +1,39 @@
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from datetime import datetime
+
+import utils.natalia_hh_postgres as pg_utils
+
+default_args = {
+    "owner" : "nataliia",
+    "retries": 1,
+}
+
+with DAG(
+    dag_id='nataliia_hh_to_postgres',
+    default_args=default_args,
+    start_date=datetime(2025, 12, 25),
+    schedule_interval='0 7 * * *',
+    catchup=True,
+    max_active_runs=1,
+) as dag:
+
+    # Создаем при необходимости таблицу в постгрес
+    init_postgres_tables_task = PythonOperator(
+        task_id='init_postgres_tables',
+        python_callable=pg_utils.init_postgres_tables
+    )
+
+    # Проверяем новые файлы в MinIO
+    check_new_files_task = PythonOperator(
+        task_id='check_new_files',
+        python_callable=pg_utils.check_new_files
+    )
+
+    # Загружаем новые файлы в Postgres
+    load_to_postgres_task = PythonOperator(
+        task_id='load_files_to_postgres',
+        python_callable=pg_utils.load_to_postgres
+    )
+
+    init_postgres_tables_task >> check_new_files_task >> load_to_postgres_task
