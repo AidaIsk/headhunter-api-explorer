@@ -159,7 +159,7 @@ def load_to_postgres(**context):
                 row.get('response_url'), row.get('sort_point_distance'), row.get('published_at'), row.get('created_at'),
                 row.get('archived'), row.get('apply_alternate_url'), row.get('show_logo_in_search'),
                 row.get('show_contacts'), json.dumps(row.get('insider_interview')),
-                row.get('url'), row.get('alternate_url'), row.get('relations'), json.dumps(row.get('employer')),
+                row.get('url'), row.get('alternate_url'), json.dumps(row.get('relations')), json.dumps(row.get('employer')),
                 json.dumps(row.get('snippet')), json.dumps(row.get('contacts')),
                 json.dumps(row.get('schedule')), row.get('working_days'), row.get('working_time_intervals'),
                 row.get('working_time_modes'), row.get('accept_temporary'), row.get('fly_in_fly_out_duration'),
