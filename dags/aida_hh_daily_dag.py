@@ -5,6 +5,8 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.models import Variable
 from airflow.utils.trigger_rule import TriggerRule
+from utils.hh_ids import build_vacancies_ids_manifest
+
 
 from utils.aida_hh_minio import pipeline_hh_to_bronze_json
 
@@ -77,6 +79,14 @@ with DAG(
             "load_type": "daily"
         },
     )
+    build_vacancies_ids = PythonOperator(
+        task_id="build_vacancies_ids_manifest",
+        python_callable=build_vacancies_ids_manifest,
+        op_kwargs={
+            "ds": "{{ ds }}",
+            "load_type": "daily",
+        },
+    )
     telegram_notify_task = PythonOperator(
         task_id='send_telegram_notification',
         python_callable=send_telegram_message,
@@ -84,4 +94,4 @@ with DAG(
         trigger_rule=TriggerRule.ALL_DONE
     )
 
-    collect_bronze_json >> telegram_notify_task
+    collect_bronze_json >> build_vacancies_ids >> telegram_notify_task
