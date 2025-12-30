@@ -1,6 +1,6 @@
 CREATE SCHEMA IF NOT EXISTS bronze;
 
-CREATE TABLE IF NOT EXISTS hh_vacancies_bronze (
+CREATE TABLE IF NOT EXISTS bronze.hh_vacancies_bronze (
     id BIGINT PRIMARY KEY,
 
     premium BOOLEAN,
