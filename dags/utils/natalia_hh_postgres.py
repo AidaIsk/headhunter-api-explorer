@@ -29,7 +29,7 @@ def init_postgres_tables():
 
 # Проверка новых файлов в s3
 def check_new_files(**context):
-    hook = S3Hook(aws_conn_id="minio_conn")
+    hook = S3Hook(aws_conn_id="minio_hh")
 
     prefix = "bronze/hh/vacancies_list/load_type=daily"
     bucket = "hh-raw"
@@ -71,7 +71,7 @@ def load_to_postgres(**context):
     conn = hook.get_conn()
     cur = conn.cursor()
 
-    hook = S3Hook(aws_conn_id="minio_conn")
+    hook = S3Hook(aws_conn_id="minio_hh")
     bucket = "hh-raw"
     session = hook.get_session()
     s3_client = session.client("s3")
