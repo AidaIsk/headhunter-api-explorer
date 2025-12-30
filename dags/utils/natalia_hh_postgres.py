@@ -39,8 +39,8 @@ def check_new_files(**context):
     last_check = datetime.strptime(last_check_str, "%Y-%m-%d").date()
 
     # все файлы в S3
-    session = hook.get_session()
-    s3_client = session.client("s3")
+    s3_client = hook.get_conn()
+
     response = s3_client.list_objects_v2(Bucket=bucket, Prefix=prefix)
 
 
