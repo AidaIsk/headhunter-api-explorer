@@ -36,11 +36,11 @@ CREATE TABLE IF NOT EXISTS hh_vacancies_bronze (
     contacts JSONB,
 
     schedule JSONB,
-    working_days ARRAY,
-    working_time_intervals ARRAY,
-    working_time_modes ARRAY,
+    working_days JSONB,
+    working_time_intervals JSONB,
+    working_time_modes JSONB,
     accept_temporary BOOLEAN,
-    fly_in_fly_out_duration ARRAY,
+    fly_in_fly_out_duration JSONB,
 
     work_format JSONB,
     working_hours JSONB,
