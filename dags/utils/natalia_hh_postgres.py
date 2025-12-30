@@ -73,8 +73,7 @@ def load_to_postgres(**context):
 
     hook = S3Hook(aws_conn_id="minio_hh")
     bucket = "hh-raw"
-    session = hook.get_session()
-    s3_client = session.client("s3")
+    s3_client = hook.get_conn()
 
     for key in new_keys:
         obj = s3_client.get_object(Bucket=bucket, Key=key)
