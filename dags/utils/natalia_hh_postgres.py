@@ -1,11 +1,11 @@
 from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.models import Variable
 from pathlib import Path
 from datetime import datetime
-import boto3
 import json
 import pandas as pd
+
+from utils.aida_hh_minio import get_s3_client
 
 
 DDL_PATH = Path(__file__).parent / "ddl_pg_bronze.sql"
@@ -29,7 +29,7 @@ def init_postgres_tables():
 
 # Проверка новых файлов в s3
 def check_new_files(**context):
-    hook = S3Hook(aws_conn_id="minio_hh")
+    #hook = S3Hook(aws_conn_id="minio_hh")
 
     prefix = "bronze/hh/vacancies_list/load_type=daily"
     bucket = "hh-raw"
@@ -39,7 +39,7 @@ def check_new_files(**context):
     last_check = datetime.strptime(last_check_str, "%Y-%m-%d").date()
 
     # все файлы в S3
-    s3_client = hook.get_conn()
+    s3_client = get_s3_client()
 
     response = s3_client.list_objects_v2(Bucket=bucket, Prefix=prefix)
 
@@ -71,9 +71,9 @@ def load_to_postgres(**context):
     conn = hook.get_conn()
     cur = conn.cursor()
 
-    hook = S3Hook(aws_conn_id="minio_hh")
+    #hook = S3Hook(aws_conn_id="minio_hh")
     bucket = "hh-raw"
-    s3_client = hook.get_conn()
+    s3_client = get_s3_client()
 
     for key in new_keys:
         obj = s3_client.get_object(Bucket=bucket, Key=key)
