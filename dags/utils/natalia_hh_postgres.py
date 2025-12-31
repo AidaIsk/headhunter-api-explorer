@@ -63,10 +63,25 @@ def check_new_files(**context):
 def to_json_or_none(value):
     if value is None:
         return None
+
+    # pandas NaN / float NaN
     if isinstance(value, float) and math.isnan(value):
         return None
-    if pd.isna(value):
+
+    # пустые списки → NULL
+    if isinstance(value, list):
+        if len(value) == 0:
+            return None
+        return json.dumps(value, ensure_ascii=False)
+
+    # dict → JSON
+    if isinstance(value, dict):
+        return json.dumps(value, ensure_ascii=False)
+
+    # строки "null" / "NaN"
+    if value in ("null", "NaN"):
         return None
+
     return json.dumps(value, ensure_ascii=False)
 
 # правильная конвертация отсутствующих значений в колонках булевого типа
