@@ -4,6 +4,7 @@ from pathlib import Path
 from datetime import datetime
 import json
 import pandas as pd
+import math
 
 from utils.aida_hh_minio import get_s3_client
 
@@ -58,6 +59,17 @@ def check_new_files(**context):
     context["ti"].xcom_push(key="new_keys", value=new_keys)
 
 
+# замена NaN из датафрейма на None для корректной загрузки в pg json-ов 
+def to_json_or_none(value):
+    if value is None:
+        return None
+    if isinstance(value, float) and math.isnan(value):
+        return None
+    if pd.isna(value):
+        return None
+    return to_json_or_none(value, ensure_ascii=False)
+
+# загрузка данных из минио в постгрес
 def load_to_postgres(**context):
 
     ti = context['ti']
@@ -151,23 +163,23 @@ def load_to_postgres(**context):
                     load_dt = EXCLUDED.load_dt,
                     load_type = EXCLUDED.load_type
             """, (
-                row.get('id'), row.get('premium'), row.get('name'), json.dumps(row.get('department')),
+                row.get('id'), row.get('premium'), row.get('name'), to_json_or_none(row.get('department')),
                 row.get('has_test'), row.get('response_letter_required'),
-                json.dumps(row.get('area')), json.dumps(row.get('salary')), json.dumps(row.get('salary_range')),
-                json.dumps(row.get('type')), json.dumps(row.get('address')),
+                to_json_or_none(row.get('area')), to_json_or_none(row.get('salary')), to_json_or_none(row.get('salary_range')),
+                to_json_or_none(row.get('type')), to_json_or_none(row.get('address')),
                 row.get('response_url'), row.get('sort_point_distance'), row.get('published_at'), row.get('created_at'),
                 row.get('archived'), row.get('apply_alternate_url'), row.get('show_logo_in_search'),
-                row.get('show_contacts'), json.dumps(row.get('insider_interview')),
-                row.get('url'), row.get('alternate_url'), json.dumps(row.get('relations')), json.dumps(row.get('employer')),
-                json.dumps(row.get('snippet')), json.dumps(row.get('contacts')),
-                json.dumps(row.get('schedule')), json.dumps(row.get('working_days')), json.dumps(row.get('working_time_intervals')),
-                json.dumps(row.get('working_time_modes')), row.get('accept_temporary'), json.dumps(row.get('fly_in_fly_out_duration')),
-                json.dumps(row.get('work_format')), json.dumps(row.get('working_hours')),
-                json.dumps(row.get('work_schedule_by_days')), row.get('night_shifts'), json.dumps(row.get('professional_roles')),
-                row.get('accept_incomplete_resumes'), json.dumps(row.get('experience')), json.dumps(row.get('employment')),
-                json.dumps(row.get('employment_form')), row.get('internship'), row.get('adv_response_url'),
-                row.get('is_adv_vacancy'), json.dumps(row.get('adv_context')), json.dumps(row.get('branding')),
-                json.dumps(row.get('brand_snippet')), row.get('search_profile'), row.get('expected_risk_category'),
+                row.get('show_contacts'), to_json_or_none(row.get('insider_interview')),
+                row.get('url'), row.get('alternate_url'), to_json_or_none(row.get('relations')), to_json_or_none(row.get('employer')),
+                to_json_or_none(row.get('snippet')), to_json_or_none(row.get('contacts')),
+                to_json_or_none(row.get('schedule')), to_json_or_none(row.get('working_days')), to_json_or_none(row.get('working_time_intervals')),
+                to_json_or_none(row.get('working_time_modes')), row.get('accept_temporary'), to_json_or_none(row.get('fly_in_fly_out_duration')),
+                to_json_or_none(row.get('work_format')), to_json_or_none(row.get('working_hours')),
+                to_json_or_none(row.get('work_schedule_by_days')), row.get('night_shifts'), to_json_or_none(row.get('professional_roles')),
+                row.get('accept_incomplete_resumes'), to_json_or_none(row.get('experience')), to_json_or_none(row.get('employment')),
+                to_json_or_none(row.get('employment_form')), row.get('internship'), row.get('adv_response_url'),
+                row.get('is_adv_vacancy'), to_json_or_none(row.get('adv_context')), to_json_or_none(row.get('branding')),
+                to_json_or_none(row.get('brand_snippet')), row.get('search_profile'), row.get('expected_risk_category'),
                 row.get('load_dt'), row.get('load_type')
             ))
 
