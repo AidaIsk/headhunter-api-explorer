@@ -67,7 +67,7 @@ def to_json_or_none(value):
         return None
     if pd.isna(value):
         return None
-    return to_json_or_none(value, ensure_ascii=False)
+    return json.dumps(value, ensure_ascii=False)
 
 # загрузка данных из минио в постгрес
 def load_to_postgres(**context):
