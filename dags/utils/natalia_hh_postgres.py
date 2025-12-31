@@ -69,6 +69,16 @@ def to_json_or_none(value):
         return None
     return json.dumps(value, ensure_ascii=False)
 
+# правильная конвертация отсутствующих значений в колонках булевого типа
+def to_bool_or_none(value):
+    if value is None:
+        return None
+    if isinstance(value, float) and pd.isna(value):
+        return None
+    if value in ("NaN", "null"):
+        return None
+    return bool(value)
+
 # загрузка данных из минио в постгрес
 def load_to_postgres(**context):
 
@@ -168,7 +178,7 @@ def load_to_postgres(**context):
                 to_json_or_none(row.get('area')), to_json_or_none(row.get('salary')), to_json_or_none(row.get('salary_range')),
                 to_json_or_none(row.get('type')), to_json_or_none(row.get('address')),
                 row.get('response_url'), row.get('sort_point_distance'), row.get('published_at'), row.get('created_at'),
-                row.get('archived'), row.get('apply_alternate_url'), row.get('show_logo_in_search'),
+                row.get('archived'), row.get('apply_alternate_url'), to_bool_or_none(row.get('show_logo_in_search')),
                 row.get('show_contacts'), to_json_or_none(row.get('insider_interview')),
                 row.get('url'), row.get('alternate_url'), to_json_or_none(row.get('relations')), to_json_or_none(row.get('employer')),
                 to_json_or_none(row.get('snippet')), to_json_or_none(row.get('contacts')),
