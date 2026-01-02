@@ -18,29 +18,43 @@ def send_telegram_message(**context):
         telegram_token = Variable.get('TG_BOT_TOKEN')
         chat_id = Variable.get('TG_BOT_CHAT_ID')
 
-        dag_id = context['dag'].dag_id
-        ti_load = context["dag_run"].get_task_instance("collect_hh_bronze_json")
-        
-        load_state = ti_load.state
+        dag = context['dag']
+        dag_run = context['dag_run']
 
-        if load_state == "success":
-            status = "✅ *SUCCESS*"
-            severity = "info"
-        else:
-            status = "❌ *FAILED*"
-            severity = "critical"
+        # 👇 все таски, за которыми следим
+        watched_tasks = [
+            "collect_hh_bronze_json",
+            "build_vacancies_ids_manifest",
+        ]
+
+        task_results = []
+        failed = False
+
+        for task_id in watched_tasks:
+            ti = dag_run.get_task_instance(task_id)
+            state = ti.state if ti else "unknown"
+
+            if state != "success":
+                failed = True
+
+            icon = "✅" if state == "success" else "❌"
+            task_results.append(f"{icon} `{task_id}` — *{state.upper()}*")
+
+        overall_status = "❌ *FAILED*" if failed else "✅ *SUCCESS*"
+        severity = "CRITICAL" if failed else "INFO"
 
         message = f"""
 🔥 *Airflow Alert* 🔥
 
-*DAG:* `{dag_id}`
-*Task:* `collect_hh_bronze_json`
-*Status:* {status}
+*DAG:* `{dag.dag_id}`
+*Overall status:* {overall_status}
+*Severity:* `{severity}`
 
-*SEVERITY:* {severity.upper()}
-*Run ID:* {ti_load.run_id}
+*Tasks:*
+{chr(10).join(task_results)}
 
-🕒 {ti_load.end_date.strftime('%Y-%m-%d %H:%M:%S') if ti_load.end_date else 'N/A'}
+*Run ID:* `{dag_run.run_id}`
+🕒 {dag_run.end_date.strftime('%Y-%m-%d %H:%M:%S') if dag_run.end_date else 'N/A'}
         """
 
         url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
@@ -53,11 +67,10 @@ def send_telegram_message(**context):
         if resp.status_code != 200:
             logging.error(f"Ошибка отправки Telegram: {resp.text}")
         else:
-            logging.info(f"Telegram уведомление отправлено: {message}")
+            logging.info("Telegram уведомление отправлено")
 
     except Exception as e:
         logging.error(f"Не удалось отправить сообщение в Telegram: {e}")
-
 
 
 with DAG(
