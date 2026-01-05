@@ -132,3 +132,31 @@ def build_details_coverage_report(ds: str, load_type: str):
     print(f"coverage_pct={coverage_pct}")
 
     print("sample_missing_ids:", list(sorted(missing_set)[:5]))
+
+    report = dict()
+    report['ds'] = ds
+    report['load_type'] = load_type
+    report['expected_count'] = expected_count
+    report['loaded_count'] = loaded_count
+    report['missing_count'] = missing_count
+    report['coverage_pct'] = coverage_pct
+    report['sample_missing_ids'] = list(sorted(missing_set)[:5])
+    report['found_files'] = len(keys)
+    report["severity"] = 'OK' if missing_count == 0 else ('WARNING' if (missing_count <= 5 or coverage_pct >= 99) else 'CRITICAL')
+
+    object_key = f'bronze/hh/reports/vacancy_details_coverage/load_type={load_type}/dt={ds}/report.json'
+
+    local_path = f"/tmp/vacancy_details_coverage_{ds}_{load_type}.json"
+    Path("/tmp").mkdir(parents=True, exist_ok=True)
+
+    with open(local_path, "w", encoding="utf-8") as f:
+        json.dump(report, f, ensure_ascii=False, indent=2)
+
+    s3_client.upload_file(local_path, minio_bucket, object_key)
+
+    s3_path = f"s3://{minio_bucket}/{object_key}"
+    print(s3_path)
+    return s3_path
+
+
+
