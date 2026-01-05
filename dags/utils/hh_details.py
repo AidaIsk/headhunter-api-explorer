@@ -91,5 +91,21 @@ def save_details_batch_to_minio(details_rows: list[dict], ds: str, load_type: st
 
 def build_details_coverage_report(ds: str, load_type: str):
 
-    expected_ids = load_vacancy_ids(ds, load_type)
+    expected_rows = load_vacancy_ids(ds, load_type)
+    expected_set = {row['vacancy_id'] for row in expected_rows}
+    expected_count = len(expected_set)
 
+    prefix = f"bronze/hh/vacancy_details/load_type={load_type}/dt={ds}/"
+    s3_client = get_s3_client()
+
+    resp = s3_client.list_objects_v2(
+        Bucket=minio_bucket, 
+        Prefix=prefix,
+        )
+
+    contents = resp.get("Contents", [])
+    keys = [obj["Key"] for obj in contents if obj["Key"].endswith(".jsonl")]
+
+    print(f"expected_count={expected_count}")
+    print(f"found_files={len(keys)}")
+    print("sample keys:", keys[:3])
