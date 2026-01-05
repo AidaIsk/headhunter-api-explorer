@@ -1,10 +1,6 @@
 from datetime import datetime
-import requests
-import logging
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.models import Variable
-from airflow.utils.trigger_rule import TriggerRule
 from utils.hh_details import build_details_coverage_report
 from utils.hh_details import collect_vacancy_details
 
