@@ -88,3 +88,8 @@ def save_details_batch_to_minio(details_rows: list[dict], ds: str, load_type: st
     s3_client.upload_file(local_path, minio_bucket, object_key)
 
     return f"s3://{minio_bucket}/{object_key}"
+
+def build_details_coverage_report(ds: str, load_type: str):
+
+    expected_ids = load_vacancy_ids(ds, load_type)
+
