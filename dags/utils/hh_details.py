@@ -96,6 +96,8 @@ def build_details_coverage_report(ds: str, load_type: str):
     expected_count = len(expected_set)
 
     prefix = f"bronze/hh/vacancy_details/load_type={load_type}/dt={ds}/"
+    minio_bucket = os.getenv("MINIO_BUCKET")
+
     s3_client = get_s3_client()
 
     resp = s3_client.list_objects_v2(
@@ -109,3 +111,24 @@ def build_details_coverage_report(ds: str, load_type: str):
     print(f"expected_count={expected_count}")
     print(f"found_files={len(keys)}")
     print("sample keys:", keys[:3])
+
+    loaded_set = set()
+
+    for key in keys:
+        response = s3_client.get_object(Bucket=minio_bucket, Key=key)
+        for line in response['Body'].iter_lines():
+            if not line:
+                continue
+            row = json.loads(line.decode("utf-8"))
+            loaded_set.add(row['id'])
+
+    loaded_count = len(loaded_set)
+    missing_set = expected_set - loaded_set
+    missing_count = len(missing_set)
+    coverage_pct = 0.0 if expected_count == 0 else loaded_count / expected_count * 100
+
+    print(f"loaded_count={loaded_count}")
+    print(f"missing_count={missing_count}")
+    print(f"coverage_pct={coverage_pct}")
+
+    print("sample_missing_ids:", list(sorted(missing_set)[:5]))
