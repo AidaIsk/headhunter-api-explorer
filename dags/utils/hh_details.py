@@ -49,6 +49,8 @@ def split_into_batches(rows: list[dict], batch_size: int = 200) -> list[list[dic
 def fetch_vacancy_details_batch(batch: list[dict], ds: str, load_type: str, batch_idx: int):
     details_rows = []
     failed_ids = []
+    status_counts=dict()
+    exception_count = 0
     for row in batch:
         vacancy_id = row["vacancy_id"]
         URL = f'{BASE_URL}/{vacancy_id}'
@@ -58,9 +60,14 @@ def fetch_vacancy_details_batch(batch: list[dict], ds: str, load_type: str, batc
                 headers=HEADERS,
                 timeout=30,
             )
-            response.raise_for_status()         
+            if response.status_code != 200:
+                status_counts[response.status_code] = status_counts.get(response.status_code, 0) + 1
+                failed_ids.append(vacancy_id)
+            response.raise_for_status()     
+
         except requests.exceptions.RequestException as e:
             failed_ids.append(vacancy_id)
+            exception_count += 1
             continue
         detail = response.json()
         detail['search_profile'] = row.get('search_profile')
@@ -69,6 +76,14 @@ def fetch_vacancy_details_batch(batch: list[dict], ds: str, load_type: str, batc
         detail['load_type']=load_type
         detail['batch_idx']=batch_idx
         details_rows.append(detail)
+
+        print('batch_idx: ', batch_idx)
+        print('ok=', details_rows)
+        print('failed=', failed_ids)
+        print('errors=',status_counts)
+        print('exception=',exception_count)
+
+
     return details_rows, failed_ids
 
 def save_details_batch_to_minio(details_rows: list[dict], ds: str, load_type: str, batch_idx: int) -> str:
