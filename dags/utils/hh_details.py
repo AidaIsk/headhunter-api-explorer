@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import boto3
 import os
+import time
 import requests
 from typing import Dict, List, Tuple
 
@@ -53,6 +54,8 @@ def fetch_vacancy_details_batch(
     status_counts: Dict[int, int] = {}
     exception_count = 0
 
+    session = requests.Session()
+
     for row in batch:
         vacancy_id = row.get("vacancy_id")
         if not vacancy_id:
@@ -63,7 +66,8 @@ def fetch_vacancy_details_batch(
         url = f"{BASE_URL}/{vacancy_id}"
 
         try:
-            resp = requests.get(url, headers=HEADERS, timeout=30)
+            resp = session.get(url, headers=HEADERS, timeout=30)
+            time.sleep(0.3)
 
             # Важно: статус != 200 — это не exception, но это FAIL по бизнес-логике
             if resp.status_code != 200:
