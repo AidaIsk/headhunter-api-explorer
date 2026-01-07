@@ -48,7 +48,9 @@ def fetch_vacancy_details_batch(
     ds: str,
     load_type: str,
     batch_idx: int,
-) -> Tuple[List[dict], List[str], Dict[int, int], int]:
+) -> Tuple[List[dict], List[dict], Dict[int, int], int]:
+    failed_records = []
+
     details_rows: List[dict] = []
     failed_ids: List[str] = []
     status_counts: Dict[int, int] = {}
@@ -73,6 +75,21 @@ def fetch_vacancy_details_batch(
             if resp.status_code != 200:
                 status_counts[resp.status_code] = status_counts.get(resp.status_code, 0) + 1
                 failed_ids.append(str(vacancy_id))
+                if resp.status_code == 404:
+                    reason = "not_found"
+                elif resp.status_code == 429:
+                    reason = "rate_limited"
+                else:
+                    reason="http_error"
+                failed_records.append(
+                    {'vacancy_id':str(vacancy_id), 
+                    "http_status":resp.status_code, 
+                    "reason":reason,
+                    'ds':ds, 
+                    "load_type":load_type, 
+                    "batch_idx":batch_idx,
+                    }
+                )
                 continue
 
             detail = resp.json()
@@ -80,11 +97,31 @@ def fetch_vacancy_details_batch(
         except requests.exceptions.RequestException:
             exception_count += 1
             failed_ids.append(str(vacancy_id))
+            reason="request_exception"
+            failed_records.append(
+                    {'vacancy_id':str(vacancy_id), 
+                    "http_status":"exception",
+                    "reason":reason,
+                    'ds':ds, 
+                    "load_type":load_type, 
+                    "batch_idx":batch_idx,
+                    }
+                )
             continue
         except ValueError:
             # json decode error
             exception_count += 1
             failed_ids.append(str(vacancy_id))
+            reason = "json_decode_error"
+            failed_records.append(
+                    {'vacancy_id':str(vacancy_id), 
+                    "http_status":"exception",
+                    "reason":reason,
+                    'ds':ds, 
+                    "load_type":load_type, 
+                    "batch_idx":batch_idx,
+                    }
+                )
             continue
 
         # ✅ делаем self-contained record: добавляем метаданные из manifest
@@ -96,7 +133,7 @@ def fetch_vacancy_details_batch(
 
         details_rows.append(detail)
 
-    return details_rows, failed_ids, status_counts, exception_count
+    return details_rows, failed_records, status_counts, exception_count
 
 
 def save_details_batch_to_minio(
@@ -188,13 +225,15 @@ def collect_vacancy_details(ds: str, load_type: str, batch_size: int = 200):
     expected_ids = load_vacancy_ids(ds, load_type)
     batches = split_into_batches(expected_ids, batch_size=batch_size)
 
+    all_failed_records = []
+
     total_ok = 0
     total_failed = 0
     total_exceptions = 0
     total_status_counts: Dict[int, int] = {}
 
     for batch_idx, batch in enumerate(batches):
-        details_rows, failed_ids, status_counts, exception_count = fetch_vacancy_details_batch(
+        details_rows, failed_records, status_counts, exception_count = fetch_vacancy_details_batch(
             batch=batch,
             ds=ds,
             load_type=load_type,
@@ -204,11 +243,13 @@ def collect_vacancy_details(ds: str, load_type: str, batch_size: int = 200):
         save_details_batch_to_minio(details_rows, ds, load_type, batch_idx)
 
         ok_count = len(details_rows)
-        failed_count = len(failed_ids)
+        failed_count = len(failed_records)
 
         total_ok += ok_count
         total_failed += failed_count
         total_exceptions += exception_count
+
+        all_failed_records.extend(failed_records)
 
         for k, v in status_counts.items():
             total_status_counts[k] = total_status_counts.get(k, 0) + v
