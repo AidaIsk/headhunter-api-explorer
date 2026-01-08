@@ -138,19 +138,41 @@ BI / дашборды — планируется
 ##  Структура репозитория
 ```text
 .
-├── dags/
-│   ├── aida_hh_init_*.py
-│   ├── aida_hh_daily_*.py
-│   ├── aida_hh_details_daily.py
-│   ├── utils/
-│   └── legacy/
 ├── configs/
-│   └── search_profiles.yaml
-├── docker-compose.yml
-├── Dockerfile
-├── .env.example
-├── logs/
-└── minio_data/
+│   └── search_profiles.yaml        # Конфигурация поисковых профилей (data-driven ingestion)
+│
+├── dags/
+│   ├── aida_hh_init.py             # Инициализация (init / backfill сценарии)
+│   ├── aida_hh_daily_dag.py        # Daily DAG: сбор списка вакансий (IDs)
+│   ├── aida_hh_details_daily_dag.py# Daily DAG: enrichment вакансий (details)
+│   ├── natalia_hh_postgres_dag.py  # Загрузка Bronze → Postgres (raw/staging)
+│   ├── test_dag.py                 # Тестовый / экспериментальный DAG
+│   │
+│   ├── data/
+│   │   ├── hh_vacancies.csv        # Тестовые / вспомогательные данные
+│   │   └── .gitkeep
+│   │
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── aida_hh_api.py          # Работа с HH API (requests, rate limits)
+│   │   ├── aida_hh_minio.py        # Клиенты и операции с MinIO
+│   │   ├── hh_ids.py               # Сбор и хранение списка vacancy IDs
+│   │   ├── hh_details.py           # Сбор vacancy details + coverage / failures
+│   │   ├── search_profiles.py      # Загрузка и обработка search_profiles.yaml
+│   │   ├── hh_loader_s3.py          # Загрузка данных из MinIO
+│   │   ├── hh_loader_csv.py         # CSV-loader (вспомогательно)
+│   │   ├── ddl_pg_bronze.sql        # DDL для raw/bronze слоя в Postgres
+│   │   └── natalia_hh_postgres.py   # Логика загрузки данных в Postgres
+│   │
+│   └── legacy/
+│       ├── aida_hh_init_dag.py      # Устаревшие DAG'и (сохранены для истории)
+│       └── minio_pandas_dag.py
+│
+├── Dockerfile                      # Docker-образ Airflow
+├── docker-compose.yml              # Локальный запуск Airflow + MinIO + Postgres
+├── .env.example                    # Пример переменных окружения
+├── .gitignore
+└── README.md
 ```
 ##  Команда и зоны ответственности
 ### Aida Iskakova
