@@ -82,7 +82,7 @@ with DAG(
         python_callable=pg_utils.check_new_files_batch,
         op_kwargs={
         "bucket": "hh-raw",
-        "prefix": "bronze/hh/vacancies_details/load_type=daily"
+        "prefix": "bronze/hh/vacancy_details/load_type=daily"
         }
     )
 
@@ -92,7 +92,7 @@ with DAG(
         python_callable=pg_utils.load_to_postgres_batch,
         op_kwargs={
         "bucket": "hh-raw",
-        "prefix": "bronze/hh/vacancies_details/load_type=daily"
+        "prefix": "bronze/hh/vacancy_details/load_type=daily"
         }
     )
 
