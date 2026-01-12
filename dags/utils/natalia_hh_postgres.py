@@ -91,6 +91,11 @@ def check_new_files_batch(bucket, prefix, **context):
     # Сохраняем в XCom 
     context["ti"].xcom_push(key="dates_to_reload", value=dates_to_reload)
 
+    print("LAST_CHECK:", last_check)
+    print("FOUND DATES:", dates_files.keys())
+    print("DATES TO RELOAD:", dates_to_reload)
+
+
 # замена NaN из датафрейма на None для корректной загрузки в pg json-ов 
 def to_json_or_none(value):
     if value is None:
