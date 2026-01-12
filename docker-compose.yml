@@ -27,14 +27,6 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: airflow_init
-    
-    restart: unless-stopped
-
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
     entrypoint: ""
     environment:
@@ -179,6 +171,15 @@ services:
 
   adminer:
     image: adminer
+      
+    restart: unless-stopped
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        
     ports:
       - "${ADMINER_HOST_PORT}:8080"
     depends_on:
