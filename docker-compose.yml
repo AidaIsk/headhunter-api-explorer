@@ -4,6 +4,15 @@ services:
   postgres:
     image: postgres:15
     container_name: pg
+
+    restart: unless-stopped
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -18,6 +27,15 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: airflow_init
+    
+    restart: unless-stopped
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     entrypoint: ""
     environment:
       AIRFLOW_UID: 1000
@@ -40,6 +58,15 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: airflow_webserver
+    
+    restart: unless-stopped
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     environment:
       AIRFLOW_UID: 1000
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -63,6 +90,14 @@ services:
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_BUCKET: ${MINIO_BUCKET}
 
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+
     depends_on:
       - postgres
       - airflow-init
@@ -80,6 +115,15 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: airflow_scheduler
+    
+    restart: unless-stopped
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
     environment:
       AIRFLOW_UID: 1000
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -107,6 +151,22 @@ services:
   minio:
     image: minio/minio
     container_name: minio
+    
+    restart: unless-stopped
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
     ports:
       - "9000:9000"   # доступ к S3 API
       - "9001:9001"   # доступ к веб-консоли
