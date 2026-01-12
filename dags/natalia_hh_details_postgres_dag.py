@@ -9,47 +9,47 @@ import requests
 
 import utils.natalia_hh_postgres as pg_utils
 
-# def send_telegram_notification(**context):
-#     try:
-#         telegram_token = Variable.get("TG_BOT_TOKEN")
-#         chat_id = Variable.get("TG_BOT_CHAT_ID")
+def send_telegram_notification(**context):
+    try:
+        telegram_token = Variable.get("TG_BOT_TOKEN")
+        chat_id = Variable.get("TG_BOT_CHAT_ID")
 
-#         dag_id = context["dag"].dag_id
-#         ti = context["dag_run"].get_task_instance("load_files_to_postgres")
+        dag_id = context["dag"].dag_id
+        ti = context["dag_run"].get_task_instance("load_files_to_postgres")
 
-#         state = ti.state if ti else "unknown"
+        state = ti.state if ti else "unknown"
 
-#         if state == "success":
-#             status = "✅ SUCCESS"
-#         else:
-#             status = "❌ FAILED"
+        if state == "success":
+            status = "✅ SUCCESS"
+        else:
+            status = "❌ FAILED"
 
-#         message = f"""
-# 📦 *Airflow DAG notification*
+        message = f"""
+📦 *Airflow DAG notification*
 
-# *DAG:* `{dag_id}`
-# *Task:* `load_files_to_postgres`
-# *Status:* {status}
-# *Run ID:* `{ti.run_id}`
+*DAG:* `{dag_id}`
+*Task:* `load_files_to_postgres`
+*Status:* {status}
+*Run ID:* `{ti.run_id}`
 
-# 🕒 {ti.end_date.strftime('%Y-%m-%d %H:%M:%S') if ti.end_date else 'N/A'}
-#         """
+🕒 {ti.end_date.strftime('%Y-%m-%d %H:%M:%S') if ti.end_date else 'N/A'}
+        """
 
-#         url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
-#         resp = requests.post(
-#             url,
-#             json={
-#                 "chat_id": chat_id,
-#                 "text": message,
-#                 "parse_mode": "Markdown"
-#             }
-#         )
+        url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
+        resp = requests.post(
+            url,
+            json={
+                "chat_id": chat_id,
+                "text": message,
+                "parse_mode": "Markdown"
+            }
+        )
 
-#         if resp.status_code != 200:
-#             logging.error(f"Telegram error: {resp.text}")
+        if resp.status_code != 200:
+            logging.error(f"Telegram error: {resp.text}")
 
-#     except Exception as e:
-#         logging.error(f"Failed to send Telegram notification: {e}")
+    except Exception as e:
+        logging.error(f"Failed to send Telegram notification: {e}")
 
 
 default_args = {
