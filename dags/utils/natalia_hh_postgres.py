@@ -412,11 +412,11 @@ def load_to_postgres_batch(bucket, prefix, **context):
     for dt in dates_to_reload:
         print(f"Загружаем дату {dt}")
 
-        prefix = f"{prefix}/dt={dt}/"
+        df_prefix = f"{prefix}/dt={dt}/"
 
         response = s3_client.list_objects_v2(
             Bucket=bucket,
-            Prefix=prefix
+            Prefix=df_prefix
         )
 
         objects = response.get("Contents", [])
