@@ -78,7 +78,7 @@ with DAG(
 
     # Проверяем новые файлы в MinIO
     check_new_files_task = PythonOperator(
-        task_id='check_new_files',
+        task_id='check_new_files_batch',
         python_callable=pg_utils.check_new_files_batch,
         op_kwargs={
         "bucket": "hh-raw",
