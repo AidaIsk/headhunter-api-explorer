@@ -1,10 +1,12 @@
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.models import Variable
+
 from pathlib import Path
 from datetime import datetime
 import json
 import pandas as pd
 import math
+from psycopg2.extras import execute_values
 
 from utils.aida_hh_minio import get_s3_client
 
