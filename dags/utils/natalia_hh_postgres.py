@@ -339,7 +339,7 @@ def load_to_postgres_batch(bucket, prefix, **context):
     s3_client = get_s3_client()
 
     VACANCIES_DETAILS_UPSERT_SQL = """
-        INSERT INTO bronze.hh_vacancies_bronze (
+        INSERT INTO bronze.hh_vacancies_details_bronze (
             id, premium, name, department, has_test, response_letter_required,
             area, salary, salary_range, type, address,
             response_url, sort_point_distance, published_at, created_at, archived,
