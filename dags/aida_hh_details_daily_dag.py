@@ -4,6 +4,8 @@ import logging
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.utils.trigger_rule import TriggerRule
+from airflow.models import Variable
 
 from utils.hh_details import build_details_coverage_report
 from utils.hh_details import collect_vacancy_details
