@@ -319,7 +319,7 @@ def df_to_tuples(df: pd.DataFrame):
             to_json_or_none(row.get("work_format")),        # work_format
             to_json_or_none(row.get("work_schedule_by_days")), # work_schedule_by_days
             to_json_or_none(row.get("working_hours")),      # working_hours
-            row.get("show_logo_in_search"),                 # show_logo_in_search
+            to_bool_or_none(row.get("show_logo_in_search")),   # show_logo_in_search
             row.get("closed_for_applicants"),               # closed_for_applicants
             row.get("search_profile"),                      # search_profile
             row.get("expected_risk_category"),              # expected_risk_category
