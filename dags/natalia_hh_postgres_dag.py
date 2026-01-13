@@ -27,13 +27,21 @@ with DAG(
     # Создаем при необходимости таблицу в постгрес
     init_postgres_tables_task = PythonOperator(
         task_id='init_postgres_tables',
-        python_callable=pg_utils.init_postgres_tables
+        python_callable=pg_utils.init_postgres_tables,
+        op_kwargs={
+            "postgres_conn_id": "postgres_bronze",
+            "ddl_path": "dags/utils/ddl_pg_bronze.sql"
+        }
     )
 
     # Проверяем новые файлы в MinIO
     check_new_files_task = PythonOperator(
         task_id='check_new_files',
-        python_callable=pg_utils.check_new_files
+        python_callable=pg_utils.check_new_files,
+        op_kwargs={
+            "bucket": "hh-raw",
+            "prefix": "bronze/hh/vacancies_list/load_type=daily"
+        }
     )
 
     # Загружаем новые файлы в Postgres
