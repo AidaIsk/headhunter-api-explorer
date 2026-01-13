@@ -7,6 +7,8 @@ import json
 import pandas as pd
 import math
 from psycopg2.extras import execute_values
+import logging
+import requests
 
 from utils.aida_hh_minio import get_s3_client
 
@@ -545,4 +547,64 @@ def load_to_postgres_batch(bucket, prefix, **context):
     conn.close()
 
 
-    
+# отправка уведомлений о статусе тасок в Telegram
+def send_telegram_notification(dag_run=None, dag=None, watched_tasks=None, **context):
+    try:
+        # Подтягиваем dag и dag_run из context, если не переданы явно
+        dag_run = dag_run or context.get("dag_run")
+        dag = dag or context.get("dag")
+        
+        if not dag_run or not dag or not watched_tasks:
+            logging.warning("send_telegram_notification вызван без dag_run, dag или watched_tasks")
+            return
+
+        telegram_token = Variable.get('TG_BOT_TOKEN')
+        chat_id = Variable.get('TG_BOT_CHAT_ID')
+
+        task_results = []
+        failed = False
+
+        # Получаем статус каждой задачи из watched_tasks
+        for task_id in watched_tasks:
+            ti = dag_run.get_task_instance(task_id)
+            state = ti.state if ti else "unknown"
+
+            if state != "success":
+                failed = True
+
+            icon = "✅" if state == "success" else "❌"
+            task_results.append(f"{icon} `{task_id}` — *{state.upper()}*")
+
+        overall_status = "❌ *FAILED*" if failed else "✅ *SUCCESS*"
+        severity = "CRITICAL" if failed else "INFO"
+
+        # Формируем сообщение
+        message = f"""
+🔥 *Airflow Alert* 🔥
+
+*DAG:* `{dag.dag_id}`
+*Overall status:* {overall_status}
+*Severity:* `{severity}`
+
+*Tasks:*
+{chr(10).join(task_results)}
+
+*Run ID:* `{dag_run.run_id}`
+🕒 {dag_run.end_date.strftime('%Y-%m-%d %H:%M:%S') if dag_run.end_date else 'N/A'}
+        """
+
+        # Отправка в Telegram
+        url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
+        resp = requests.post(url, json={
+            "chat_id": chat_id,
+            "text": message,
+            "parse_mode": "Markdown"
+        })
+
+        if resp.status_code != 200:
+            logging.error(f"Ошибка отправки Telegram: {resp.text}")
+        else:
+            logging.info("Telegram уведомление отправлено")
+
+    except Exception as e:
+        logging.error(f"Не удалось отправить сообщение в Telegram: {e}")
