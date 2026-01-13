@@ -49,4 +49,4 @@ with DAG(
     )
     
 
-    collect_vacancy_details_task >> build_details_coverage_report_task >> >> telegram_notify_task
+    collect_vacancy_details_task >> build_details_coverage_report_task >> telegram_notify_task
