@@ -438,7 +438,13 @@ def load_to_postgres_batch(bucket, prefix, **context):
             )["Body"]
 
             lines = body.read().decode("utf-8").splitlines()
-            data = [json.loads(line) for line in lines]
+            data = []
+            for i, line in enumerate(lines, start=1):
+                try:
+                    data.append(json.loads(line))
+                except json.JSONDecodeError as e:
+                    print(f"[WARNING] Битая строка JSON в файле {key}, строка {i}: {e}")
+                    print(f"Содержимое (обрезано до 200 символов): {line[:200]}")
 
             if data:
                 dfs.append(pd.DataFrame(data))
