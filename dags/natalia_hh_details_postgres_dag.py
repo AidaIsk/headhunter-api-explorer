@@ -39,8 +39,8 @@ with DAG(
         task_id='check_new_files_batch',
         python_callable=pg_utils.check_new_files_batch,
         op_kwargs={
-        "bucket": "hh-raw",
-        "prefix": "bronze/hh/vacancy_details/load_type=daily"
+            "bucket": "hh-raw",
+            "prefix": "bronze/hh/vacancy_details/load_type=daily"
         }
     )
 
