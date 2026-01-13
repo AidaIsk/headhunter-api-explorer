@@ -260,68 +260,72 @@ def df_to_tuples(df: pd.DataFrame):
 
     for _, row in df.iterrows():
         rows.append((
-            row.get("id"),
-            row.get("premium"),
-            row.get("name"),
-            to_json_or_none(row.get("department")),
-            row.get("has_test"),
-            row.get("response_letter_required"),
-
-            to_json_or_none(row.get("area")),
-            to_json_or_none(row.get("salary")),
-            to_json_or_none(row.get("salary_range")),
-            to_json_or_none(row.get("type")),
-            to_json_or_none(row.get("address")),
-
-            row.get("response_url"),
-            row.get("sort_point_distance"),
-            row.get("published_at"),
-            row.get("created_at"),
-            row.get("archived"),
-
-            row.get("apply_alternate_url"),
-            to_bool_or_none(row.get("show_logo_in_search")),
-            row.get("show_contacts"),
-            to_json_or_none(row.get("insider_interview")),
-
-            row.get("url"),
-            row.get("alternate_url"),
-            to_json_or_none(row.get("relations")),
-            to_json_or_none(row.get("employer")),
-            to_json_or_none(row.get("snippet")),
-            to_json_or_none(row.get("contacts")),
-
-            to_json_or_none(row.get("schedule")),
-            to_json_or_none(row.get("working_days")),
-            to_json_or_none(row.get("working_time_intervals")),
-            to_json_or_none(row.get("working_time_modes")),
-            row.get("accept_temporary"),
-
-            to_json_or_none(row.get("fly_in_fly_out_duration")),
-            to_json_or_none(row.get("work_format")),
-            to_json_or_none(row.get("working_hours")),
-            to_json_or_none(row.get("work_schedule_by_days")),
-            row.get("night_shifts"),
-
-            to_json_or_none(row.get("professional_roles")),
-            row.get("accept_incomplete_resumes"),
-
-            to_json_or_none(row.get("experience")),
-            to_json_or_none(row.get("employment")),
-            to_json_or_none(row.get("employment_form")),
-
-            row.get("internship"),
-            row.get("adv_response_url"),
-            row.get("is_adv_vacancy"),
-            to_json_or_none(row.get("adv_context")),
-
-            to_json_or_none(row.get("branding")),
-            to_json_or_none(row.get("brand_snippet")),
-
-            row.get("search_profile"),
-            row.get("expected_risk_category"),
-            row.get("load_dt"),
-            row.get("load_type"),
+            row.get("id"),                                 # id
+            row.get("premium"),                            # premium
+            to_json_or_none(row.get("billing_type")),      # billing_type
+            to_json_or_none(row.get("relations")),         # relations
+            row.get("name"),                               # name
+            to_json_or_none(row.get("insider_interview")), # insider_interview
+            row.get("response_letter_required"),           # response_letter_required
+            to_json_or_none(row.get("area")),               # area
+            to_json_or_none(row.get("salary")),             # salary
+            to_json_or_none(row.get("salary_range")),       # salary_range
+            to_json_or_none(row.get("type")),               # type
+            to_json_or_none(row.get("address")),            # address
+            row.get("allow_messages"),                     # allow_messages
+            to_json_or_none(row.get("experience")),        # experience
+            to_json_or_none(row.get("schedule")),          # schedule
+            to_json_or_none(row.get("employment")),        # employment
+            to_json_or_none(row.get("department")),        # department
+            row.get("show_contacts"),                      # show_contacts
+            to_json_or_none(row.get("contacts")),          # contacts
+            row.get("description"),                        # description
+            row.get("branded_description"),                # branded_description
+            to_json_or_none(row.get("vacancy_constructor_template")),  # vacancy_constructor_template
+            to_json_or_none(row.get("key_skills")),         # key_skills
+            to_json_or_none(row.get("auto_response")),      # auto_response
+            row.get("accept_handicapped"),                 # accept_handicapped
+            row.get("accept_kids"),                         # accept_kids
+            row.get("age_restriction"),                     # age_restriction
+            row.get("archived"),                            # archived
+            row.get("response_url"),                        # response_url
+            to_json_or_none(row.get("specializations")),    # specializations
+            to_json_or_none(row.get("professional_roles")), # professional_roles
+            row.get("code"),                                # code
+            row.get("hidden"),                              # hidden
+            row.get("quick_responses_allowed"),             # quick_responses_allowed
+            to_json_or_none(row.get("driver_license_types")), # driver_license_types
+            row.get("accept_incomplete_resumes"),           # accept_incomplete_resumes
+            to_json_or_none(row.get("employer")),           # employer
+            row.get("published_at"),                        # published_at
+            row.get("created_at"),                          # created_at
+            row.get("initial_created_at"),                  # initial_created_at
+            row.get("negotiations_url"),                    # negotiations_url
+            row.get("suitable_resumes_url"),                # suitable_resumes_url
+            row.get("apply_alternate_url"),                 # apply_alternate_url
+            row.get("has_test"),                             # has_test
+            to_json_or_none(row.get("test")),               # test
+            row.get("alternate_url"),                       # alternate_url
+            to_json_or_none(row.get("working_days")),       # working_days
+            to_json_or_none(row.get("working_time_intervals")), # working_time_intervals
+            to_json_or_none(row.get("working_time_modes")), # working_time_modes
+            row.get("accept_temporary"),                    # accept_temporary
+            to_json_or_none(row.get("languages")),          # languages
+            row.get("approved"),                            # approved
+            to_json_or_none(row.get("employment_form")),    # employment_form
+            to_json_or_none(row.get("fly_in_fly_out_duration")), # fly_in_fly_out_duration
+            row.get("internship"),                          # internship
+            row.get("night_shifts"),                        # night_shifts
+            to_json_or_none(row.get("work_format")),        # work_format
+            to_json_or_none(row.get("work_schedule_by_days")), # work_schedule_by_days
+            to_json_or_none(row.get("working_hours")),      # working_hours
+            row.get("show_logo_in_search"),                 # show_logo_in_search
+            row.get("closed_for_applicants"),               # closed_for_applicants
+            row.get("search_profile"),                      # search_profile
+            row.get("expected_risk_category"),              # expected_risk_category
+            row.get("load_dt"),                             # load_dt
+            row.get("load_type"),                           # load_type
+            row.get("batch_idx"),                           # batch_idx
         ))
 
     return rows
@@ -340,69 +344,139 @@ def load_to_postgres_batch(bucket, prefix, **context):
 
     VACANCIES_DETAILS_UPSERT_SQL = """
         INSERT INTO bronze.hh_vacancies_details_bronze (
-            id, premium, name, department, has_test, response_letter_required,
-            area, salary, salary_range, type, address,
-            response_url, sort_point_distance, published_at, created_at, archived,
-            apply_alternate_url, show_logo_in_search, show_contacts, insider_interview,
-            url, alternate_url, relations, employer, snippet, contacts,
-            schedule, working_days, working_time_intervals, working_time_modes, accept_temporary,
-            fly_in_fly_out_duration, work_format, working_hours, work_schedule_by_days, night_shifts,
-            professional_roles, accept_incomplete_resumes, experience, employment, employment_form,
-            internship, adv_response_url, is_adv_vacancy, adv_context,
-            branding, brand_snippet, search_profile, expected_risk_category,
-            load_dt, load_type
-        ) VALUES %s
-        ON CONFLICT (id) DO UPDATE SET
-            premium = EXCLUDED.premium,
-            name = EXCLUDED.name,
-            department = EXCLUDED.department,
-            has_test = EXCLUDED.has_test,
-            response_letter_required = EXCLUDED.response_letter_required,
-            area = EXCLUDED.area,
-            salary = EXCLUDED.salary,
-            salary_range = EXCLUDED.salary_range,
-            type = EXCLUDED.type,
-            address = EXCLUDED.address,
-            response_url = EXCLUDED.response_url,
-            sort_point_distance = EXCLUDED.sort_point_distance,
-            published_at = EXCLUDED.published_at,
-            created_at = EXCLUDED.created_at,
-            archived = EXCLUDED.archived,
-            apply_alternate_url = EXCLUDED.apply_alternate_url,
-            show_logo_in_search = EXCLUDED.show_logo_in_search,
-            show_contacts = EXCLUDED.show_contacts,
-            insider_interview = EXCLUDED.insider_interview,
-            url = EXCLUDED.url,
-            alternate_url = EXCLUDED.alternate_url,
-            relations = EXCLUDED.relations,
-            employer = EXCLUDED.employer,
-            snippet = EXCLUDED.snippet,
-            contacts = EXCLUDED.contacts,
-            schedule = EXCLUDED.schedule,
-            working_days = EXCLUDED.working_days,
-            working_time_intervals = EXCLUDED.working_time_intervals,
-            working_time_modes = EXCLUDED.working_time_modes,
-            accept_temporary = EXCLUDED.accept_temporary,
-            fly_in_fly_out_duration = EXCLUDED.fly_in_fly_out_duration,
-            work_format = EXCLUDED.work_format,
-            working_hours = EXCLUDED.working_hours,
-            work_schedule_by_days = EXCLUDED.work_schedule_by_days,
-            night_shifts = EXCLUDED.night_shifts,
-            professional_roles = EXCLUDED.professional_roles,
-            accept_incomplete_resumes = EXCLUDED.accept_incomplete_resumes,
-            experience = EXCLUDED.experience,
-            employment = EXCLUDED.employment,
-            employment_form = EXCLUDED.employment_form,
-            internship = EXCLUDED.internship,
-            adv_response_url = EXCLUDED.adv_response_url,
-            is_adv_vacancy = EXCLUDED.is_adv_vacancy,
-            adv_context = EXCLUDED.adv_context,
-            branding = EXCLUDED.branding,
-            brand_snippet = EXCLUDED.brand_snippet,
-            search_profile = EXCLUDED.search_profile,
-            expected_risk_category = EXCLUDED.expected_risk_category,
-            load_dt = EXCLUDED.load_dt,
-            load_type = EXCLUDED.load_type
+        id,
+        premium,
+        billing_type,
+        relations,
+        name,
+        insider_interview,
+        response_letter_required,
+        area,
+        salary,
+        salary_range,
+        type,
+        address,
+        allow_messages,
+        experience,
+        schedule,
+        employment,
+        department,
+        show_contacts,
+        contacts,
+        description,
+        branded_description,
+        vacancy_constructor_template,
+        key_skills,
+        auto_response,
+        accept_handicapped,
+        accept_kids,
+        age_restriction,
+        archived,
+        response_url,
+        specializations,
+        professional_roles,
+        code,
+        hidden,
+        quick_responses_allowed,
+        driver_license_types,
+        accept_incomplete_resumes,
+        employer,
+        published_at,
+        created_at,
+        initial_created_at,
+        negotiations_url,
+        suitable_resumes_url,
+        apply_alternate_url,
+        has_test,
+        test,
+        alternate_url,
+        working_days,
+        working_time_intervals,
+        working_time_modes,
+        accept_temporary,
+        languages,
+        approved,
+        employment_form,
+        fly_in_fly_out_duration,
+        internship,
+        night_shifts,
+        work_format,
+        work_schedule_by_days,
+        working_hours,
+        show_logo_in_search,
+        closed_for_applicants,
+        search_profile,
+        expected_risk_category,
+        load_dt,
+        load_type,
+        batch_idx
+    ) VALUES %s
+    ON CONFLICT (id) DO UPDATE SET
+        premium = EXCLUDED.premium,
+        billing_type = EXCLUDED.billing_type,
+        relations = EXCLUDED.relations,
+        name = EXCLUDED.name,
+        insider_interview = EXCLUDED.insider_interview,
+        response_letter_required = EXCLUDED.response_letter_required,
+        area = EXCLUDED.area,
+        salary = EXCLUDED.salary,
+        salary_range = EXCLUDED.salary_range,
+        type = EXCLUDED.type,
+        address = EXCLUDED.address,
+        allow_messages = EXCLUDED.allow_messages,
+        experience = EXCLUDED.experience,
+        schedule = EXCLUDED.schedule,
+        employment = EXCLUDED.employment,
+        department = EXCLUDED.department,
+        show_contacts = EXCLUDED.show_contacts,
+        contacts = EXCLUDED.contacts,
+        description = EXCLUDED.description,
+        branded_description = EXCLUDED.branded_description,
+        vacancy_constructor_template = EXCLUDED.vacancy_constructor_template,
+        key_skills = EXCLUDED.key_skills,
+        auto_response = EXCLUDED.auto_response,
+        accept_handicapped = EXCLUDED.accept_handicapped,
+        accept_kids = EXCLUDED.accept_kids,
+        age_restriction = EXCLUDED.age_restriction,
+        archived = EXCLUDED.archived,
+        response_url = EXCLUDED.response_url,
+        specializations = EXCLUDED.specializations,
+        professional_roles = EXCLUDED.professional_roles,
+        code = EXCLUDED.code,
+        hidden = EXCLUDED.hidden,
+        quick_responses_allowed = EXCLUDED.quick_responses_allowed,
+        driver_license_types = EXCLUDED.driver_license_types,
+        accept_incomplete_resumes = EXCLUDED.accept_incomplete_resumes,
+        employer = EXCLUDED.employer,
+        published_at = EXCLUDED.published_at,
+        created_at = EXCLUDED.created_at,
+        initial_created_at = EXCLUDED.initial_created_at,
+        negotiations_url = EXCLUDED.negotiations_url,
+        suitable_resumes_url = EXCLUDED.suitable_resumes_url,
+        apply_alternate_url = EXCLUDED.apply_alternate_url,
+        has_test = EXCLUDED.has_test,
+        test = EXCLUDED.test,
+        alternate_url = EXCLUDED.alternate_url,
+        working_days = EXCLUDED.working_days,
+        working_time_intervals = EXCLUDED.working_time_intervals,
+        working_time_modes = EXCLUDED.working_time_modes,
+        accept_temporary = EXCLUDED.accept_temporary,
+        languages = EXCLUDED.languages,
+        approved = EXCLUDED.approved,
+        employment_form = EXCLUDED.employment_form,
+        fly_in_fly_out_duration = EXCLUDED.fly_in_fly_out_duration,
+        internship = EXCLUDED.internship,
+        night_shifts = EXCLUDED.night_shifts,
+        work_format = EXCLUDED.work_format,
+        work_schedule_by_days = EXCLUDED.work_schedule_by_days,
+        working_hours = EXCLUDED.working_hours,
+        show_logo_in_search = EXCLUDED.show_logo_in_search,
+        closed_for_applicants = EXCLUDED.closed_for_applicants,
+        search_profile = EXCLUDED.search_profile,
+        expected_risk_category = EXCLUDED.expected_risk_category,
+        load_dt = EXCLUDED.load_dt,
+        load_type = EXCLUDED.load_type,
+        batch_idx = EXCLUDED.batch_idx;
     """
 
     hook = PostgresHook(postgres_conn_id="postgres_bronze")
