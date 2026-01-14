@@ -578,6 +578,9 @@ def send_telegram_notification(dag_run=None, dag=None, watched_tasks=None, **con
         overall_status = "❌ *FAILED*" if failed else "✅ *SUCCESS*"
         severity = "CRITICAL" if failed else "INFO"
 
+        run_time = dag_run.end_date or dag_run.execution_date
+        run_time_str = run_time.strftime('%Y-%m-%d %H:%M:%S') if run_time else "N/A"
+
         # Формируем сообщение
         message = f"""
 🔥 *Airflow Alert* 🔥
@@ -590,7 +593,7 @@ def send_telegram_notification(dag_run=None, dag=None, watched_tasks=None, **con
 {chr(10).join(task_results)}
 
 *Run ID:* `{dag_run.run_id}`
-🕒 {dag_run.end_date.strftime('%Y-%m-%d %H:%M:%S') if dag_run.end_date else 'N/A'}
+🕒 {run_time_str}
         """
 
         # Отправка в Telegram
