@@ -54,6 +54,7 @@ with DAG(
         }
     )
 
+    # Загружаем новые файлы с отчетами в Postgres
     load_to_postgres_report_task = PythonOperator(
         task_id='load_files_to_postgres_report',
         python_callable=pg_utils.load_to_postgres_report,
@@ -70,4 +71,4 @@ with DAG(
         trigger_rule=TriggerRule.ALL_DONE,  
     )
 
-    init_postgres_tables_task >> check_new_files_task >> load_to_postgres_task >> telegram_notify_task
+    init_postgres_tables_task >> check_new_files_task >> load_to_postgres_task >> load_to_postgres_report_task>> telegram_notify_task
