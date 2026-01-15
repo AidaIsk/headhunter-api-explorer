@@ -54,6 +54,15 @@ with DAG(
         }
     )
 
+    load_to_postgres_report_task = PythonOperator(
+        task_id='load_files_to_postgres_report',
+        python_callable=pg_utils.load_to_postgres_report,
+        op_kwargs={
+        "bucket": "hh-raw",
+        "prefix": "bronze/hh/vacancy_details_coverage/load_type=daily"
+        }
+    )
+
     telegram_notify_task = PythonOperator(
         task_id="send_telegram_notification",
         python_callable=pg_utils.send_telegram_notification,
