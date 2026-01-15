@@ -547,6 +547,103 @@ def load_to_postgres_batch(bucket, prefix, **context):
     conn.close()
 
 
+# запись в постгрес отчета по итогам загрузки details
+def load_to_postgres_report(bucket, prefix, **context):
+    ti = context['ti']
+    dates_to_reload = ti.xcom_pull(task_ids='check_new_files_batch', key='dates_to_reload')
+
+    if not dates_to_reload:
+        print("Нет новых файлов для загрузки")
+        return
+    
+    s3_client = get_s3_client()
+
+    VACANCIES_REPORT_UPSERT_SQL = """
+        INSERT INTO bronze.hh_vacancies_details_coverage_report (
+            load_dt,
+            load_type,
+            expected_count,
+            loaded_count,
+            missing_count,
+            coverage_pct,
+            severity,
+            found_files,
+            failures_by_reason
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT (load_dt) DO UPDATE SET
+            load_type = EXCLUDED.load_type,
+            expected_count = EXCLUDED.expected_count,
+            loaded_count = EXCLUDED.loaded_count,
+            missing_count = EXCLUDED.missing_count,
+            coverage_pct = EXCLUDED.coverage_pct,
+            severity = EXCLUDED.severity,
+            found_files = EXCLUDED.found_files,
+            failures_by_reason = EXCLUDED.failures_by_reason,
+            inserted_at = now();
+        """
+
+    hook = PostgresHook(postgres_conn_id="postgres_bronze")
+    conn = hook.get_conn()
+    cur = conn.cursor()
+
+    for dt in dates_to_reload:
+        print(f"Загружаем coverage-отчет за дату {dt}")
+
+        dt_prefix = f"{prefix}/dt={dt}/"
+
+        response = s3_client.list_objects_v2(
+            Bucket=bucket,
+            Prefix=dt_prefix
+        )
+
+        objects = response.get("Contents", [])
+        if not objects:
+            print(f"Нет файлов отчета за {dt}")
+            continue
+
+        json_keys = [
+            obj["Key"]
+            for obj in objects
+            if obj["Key"].endswith(".json")
+        ]
+
+        if not json_keys:
+            print(f"Нет json-отчетов за {dt}")
+            continue
+
+        for key in json_keys:
+            obj = s3_client.get_object(
+                Bucket=bucket,
+                Key=key
+            )
+
+            report = json.loads(
+                obj["Body"].read().decode("utf-8")
+            )
+
+            payload = (
+                report.get("ds"),                       # load_dt
+                report.get("load_type"),
+                report.get("expected_count"),
+                report.get("loaded_count"),
+                report.get("missing_count"),
+                report.get("coverage_pct"),
+                report.get("severity"),
+                report.get("found_files"),
+                json.dumps(report.get("failures_by_reason"))
+                if report.get("failures_by_reason") else None
+            )
+
+            cur.execute(VACANCIES_REPORT_UPSERT_SQL, payload)
+            conn.commit()
+
+            print(f"Отчет {key} успешно загружен")
+
+    cur.close()
+    conn.close()
+
+
 # отправка уведомлений о статусе тасок в Telegram
 def send_telegram_notification(dag_run=None, dag=None, watched_tasks=None, **context):
     try:
