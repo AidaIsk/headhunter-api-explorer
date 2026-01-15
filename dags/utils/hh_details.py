@@ -276,7 +276,7 @@ def _list_all_keys(bucket: str, prefix: str) -> List[str]:
     return keys
 
 
-def build_details_coverage_report(ds: str, load_type: str) -> str:
+def build_details_coverage_report(ds: str, load_type: str, **context) -> str:
     """
     Coverage:
       expected = все vacancy_id из manifest
@@ -284,6 +284,9 @@ def build_details_coverage_report(ds: str, load_type: str) -> str:
       also:
         failed_total_by_reason — сколько упало и почему (по failures файлам)
     """
+
+    ti = context["ti"]
+
     expected_rows = load_vacancy_ids(ds, load_type)
     expected_set = {str(row["vacancy_id"]) for row in expected_rows if row.get("vacancy_id")}
     expected_count = len(expected_set)
@@ -336,6 +339,11 @@ def build_details_coverage_report(ds: str, load_type: str) -> str:
         "OK"
         if missing_count == 0
         else ("WARNING" if (missing_count <= 5 or coverage_pct >= 99) else "CRITICAL")
+    )
+
+    ti.xcom_push(
+        key="severity",
+        value=severity
     )
 
     report = {
