@@ -670,7 +670,17 @@ def send_telegram_notification(dag_run=None, dag=None, watched_tasks=None, **con
                 failed = True
 
             icon = "✅" if state == "success" else "❌"
-            task_results.append(f"{icon} `{task_id}` — *{state.upper()}*")
+
+            if task_id == "build_details_coverage_report" and ti:
+                coverage_severity = ti.xcom_pull(
+                    task_ids=task_id,
+                    key="severity"
+                )
+
+            if coverage_severity:
+                extra_info = f" | severity: *{coverage_severity}*"
+            
+            task_results.append(f"{icon} `{task_id}` — *{state.upper()}*{extra_info}")
 
         overall_status = "❌ *FAILED*" if failed else "✅ *SUCCESS*"
         severity = "CRITICAL" if failed else "INFO"
