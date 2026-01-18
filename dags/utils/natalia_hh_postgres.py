@@ -677,8 +677,8 @@ def send_telegram_notification(dag_run=None, dag=None, watched_tasks=None, **con
                     key="severity"
                 )
 
-            if coverage_severity:
-                extra_info = f" | severity: *{coverage_severity}*"
+                if coverage_severity:
+                    extra_info = f" | severity: *{coverage_severity}*"
             
             task_results.append(f"{icon} `{task_id}` — *{state.upper()}*{extra_info}")
 
