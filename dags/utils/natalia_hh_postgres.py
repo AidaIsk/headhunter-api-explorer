@@ -662,7 +662,7 @@ def send_telegram_notification(dag_run=None, dag=None, watched_tasks=None, **con
         failed = False
 
         # Получаем статус каждой задачи из watched_tasks
-        for task_id in watched_tasks:
+        for task_id in sorted(set(watched_tasks)):
             ti = dag_run.get_task_instance(task_id)
             state = ti.state if ti else "unknown"
 
@@ -679,7 +679,7 @@ def send_telegram_notification(dag_run=None, dag=None, watched_tasks=None, **con
                 )
 
                 if coverage_severity:
-                    extra_info = f" | severity: *{coverage_severity}*"
+                    extra_info = f" | SEVERITY={coverage_severity}"
             
                     task_results.append(f"{icon} `{task_id}` — *{state.upper()}*{extra_info}")
 
