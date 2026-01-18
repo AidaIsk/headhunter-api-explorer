@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS bronze.hh_vacancies_bronze (
     published_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ,
     archived BOOLEAN,
+    active_from DATE,
+    active_to DATE DEFAULT '9999-01-01',
 
     apply_alternate_url TEXT,
     show_logo_in_search BOOLEAN,
