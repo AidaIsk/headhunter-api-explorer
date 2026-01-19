@@ -157,7 +157,7 @@ def load_to_postgres(**context):
                 INSERT INTO bronze.hh_vacancies_bronze (
                     id, premium, name, department, has_test, response_letter_required,
                     area, salary, salary_range, type, address,
-                    response_url, sort_point_distance, published_at, created_at, archived,
+                    response_url, sort_point_distance, published_at, created_at, archived, active_from, active_to,
                     apply_alternate_url, show_logo_in_search, show_contacts, insider_interview,
                     url, alternate_url, relations, employer, snippet, contacts,
                     schedule, working_days, working_time_intervals, working_time_modes, accept_temporary,
@@ -168,7 +168,7 @@ def load_to_postgres(**context):
                     load_dt, load_type
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (id) DO UPDATE
                 SET 
                     premium = EXCLUDED.premium,
@@ -186,6 +186,11 @@ def load_to_postgres(**context):
                     published_at = EXCLUDED.published_at,
                     created_at = EXCLUDED.created_at,
                     archived = EXCLUDED.archived,
+                    active_from = COALESCE(bronze.hh_vacancies_bronze.active_from, EXCLUDED.active_from),
+                    active_to = CASE WHEN EXCLUDED.archived = TRUE
+                                THEN EXCLUDED.load_dt
+                                ELSE DATE '2999-01-01'
+                                END,
                     apply_alternate_url = EXCLUDED.apply_alternate_url,
                     show_logo_in_search = EXCLUDED.show_logo_in_search,
                     show_contacts = EXCLUDED.show_contacts,
@@ -230,13 +235,23 @@ def load_to_postgres(**context):
         df = pd.DataFrame(data)
 
         for _, row in df.iterrows():
+
+            published_at = row.get("published_at")
+            load_dt = row.get("load_dt")
+
+            active_from = (
+                published_at.date()
+                if published_at is not None
+                else load_dt
+            )
+            
             cur.execute(VACANCIES_UPSERT_SQL, 
                 (row.get('id'), row.get('premium'), row.get('name'), to_json_or_none(row.get('department')),
                 row.get('has_test'), row.get('response_letter_required'),
                 to_json_or_none(row.get('area')), to_json_or_none(row.get('salary')), to_json_or_none(row.get('salary_range')),
                 to_json_or_none(row.get('type')), to_json_or_none(row.get('address')),
                 row.get('response_url'), row.get('sort_point_distance'), row.get('published_at'), row.get('created_at'),
-                row.get('archived'), row.get('apply_alternate_url'), to_bool_or_none(row.get('show_logo_in_search')),
+                row.get('archived'), active_from, None, row.get('apply_alternate_url'), to_bool_or_none(row.get('show_logo_in_search')),
                 row.get('show_contacts'), to_json_or_none(row.get('insider_interview')),
                 row.get('url'), row.get('alternate_url'), to_json_or_none(row.get('relations')), to_json_or_none(row.get('employer')),
                 to_json_or_none(row.get('snippet')), to_json_or_none(row.get('contacts')),
