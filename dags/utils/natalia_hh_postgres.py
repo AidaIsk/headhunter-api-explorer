@@ -237,7 +237,7 @@ def load_to_postgres(**context):
         for _, row in df.iterrows():
 
             published_at = row.get("published_at")
-            load_dt = row.get("load_dt")
+            load_dt = pd.to_datetime(row.get("load_dt")).date()
 
             active_from = (
                 datetime.strptime(published_at, "%Y-%m-%dT%H:%M:%S%z").date()
