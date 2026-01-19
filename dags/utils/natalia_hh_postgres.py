@@ -240,8 +240,8 @@ def load_to_postgres(**context):
             load_dt = row.get("load_dt")
 
             active_from = (
-                published_at.date()
-                if published_at is not None
+                datetime.strptime(published_at, "%Y-%m-%dT%H:%M:%S%z").date()
+                if isinstance(published_at, str)
                 else load_dt
             )
             
