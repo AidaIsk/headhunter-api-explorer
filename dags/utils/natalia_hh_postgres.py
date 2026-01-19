@@ -2,7 +2,7 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.models import Variable
 
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, date
 import json
 import pandas as pd
 import math
@@ -238,12 +238,15 @@ def load_to_postgres(**context):
 
             published_at = row.get("published_at")
             load_dt = pd.to_datetime(row.get("load_dt")).date()
+            archived = row.get("archived")
 
             active_from = (
                 datetime.strptime(published_at, "%Y-%m-%dT%H:%M:%S%z").date()
                 if isinstance(published_at, str)
                 else load_dt
             )
+
+            active_to = (load_dt if archived else date(2999, 1, 1))
             
             cur.execute(VACANCIES_UPSERT_SQL, 
                 (row.get('id'), row.get('premium'), row.get('name'), to_json_or_none(row.get('department')),
@@ -251,7 +254,7 @@ def load_to_postgres(**context):
                 to_json_or_none(row.get('area')), to_json_or_none(row.get('salary')), to_json_or_none(row.get('salary_range')),
                 to_json_or_none(row.get('type')), to_json_or_none(row.get('address')),
                 row.get('response_url'), row.get('sort_point_distance'), row.get('published_at'), row.get('created_at'),
-                row.get('archived'), active_from, None, row.get('apply_alternate_url'), to_bool_or_none(row.get('show_logo_in_search')),
+                row.get('archived'), active_from, active_to, row.get('apply_alternate_url'), to_bool_or_none(row.get('show_logo_in_search')),
                 row.get('show_contacts'), to_json_or_none(row.get('insider_interview')),
                 row.get('url'), row.get('alternate_url'), to_json_or_none(row.get('relations')), to_json_or_none(row.get('employer')),
                 to_json_or_none(row.get('snippet')), to_json_or_none(row.get('contacts')),
