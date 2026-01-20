@@ -19,7 +19,7 @@ with DAG(
     dag_id='nataliia_hh_details_to_postgres',
     default_args=default_args,
     start_date=datetime(2026, 1, 4),
-    schedule_interval='0 8 * * *',
+    schedule_interval='0 3 * * *',
     catchup=True,
     max_active_runs=1,
 ) as dag:
@@ -30,7 +30,7 @@ with DAG(
         python_callable=pg_utils.init_postgres_tables,
         op_kwargs={
             "postgres_conn_id": "postgres_bronze",
-            "ddl_path": "dags/utils/ddl_pg_bronze_details.sql"
+            "ddl_path": "dags/utils/sql/ddl_pg_bronze_details.sql"
         }
     )
 
