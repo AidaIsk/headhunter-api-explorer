@@ -5,7 +5,7 @@ from airflow.utils.trigger_rule import TriggerRule
 from datetime import datetime
 
 from utils.silver_config import SILVER_TABLES
-# from utils.natalia_hh_pg_silver import load_silver_vacancies, load_silver_employers, load_silver_vacancy_skills, load_silver_vacancy_text
+from utils.natalia_hh_pg_silver import load_silver_vacancies, load_silver_employers, load_silver_vacancy_skills, load_silver_vacancy_text
 from utils.natalia_hh_postgres import init_postgres_tables, send_telegram_notification
 
 
@@ -24,6 +24,7 @@ with DAG(
         load_task_id = f"load_to_pg_silver_{table_name}"
         silver_load_task_ids.append(load_task_id)
 
+
         init_postgres_tables_task = PythonOperator(
             task_id=f"init_silver_{table_name}",
             python_callable=init_postgres_tables,
@@ -37,8 +38,7 @@ with DAG(
             task_id=load_task_id,
             python_callable=table['load_func'],
             op_kwargs={
-                "load_func": table["load_func"],
-                "postgres_conn_id": "postgres_bronze"
+                "load_dt": "{{ execution_date }}"
             }
         )
 
