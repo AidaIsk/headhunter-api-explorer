@@ -33,8 +33,8 @@ with DAG(
         op_kwargs={
             "postgres_conn_id": "postgres_bronze",
             "ddl_path": str(SQL_DIR / "ddl_pg_bronze_details.sql")
-        }"
-    )"
+        }
+    )
 
     # Проверяем новые файлы в MinIO
     check_new_files_task = PythonOperator(
@@ -51,8 +51,8 @@ with DAG(
         task_id='load_files_to_postgres',
         python_callable=pg_utils.load_to_postgres_batch,
         op_kwargs={
-        "bucket": "hh-raw",
-        "prefix": "bronze/hh/vacancy_details/load_type=daily"
+            "bucket": "hh-raw",
+            "prefix": "bronze/hh/vacancy_details/load_type=daily"
         }
     )
 
