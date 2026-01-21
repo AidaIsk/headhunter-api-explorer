@@ -24,13 +24,16 @@ with DAG(
     max_active_runs=1,
 ) as dag:
 
+    BASE_DIR = Path(__file__).resolve().parent
+    SQL_DIR = BASE_DIR / "utils" / "sql"
+
     # Создаем при необходимости таблицу в постгрес
     init_postgres_tables_task = PythonOperator(
         task_id='init_postgres_tables',
         python_callable=pg_utils.init_postgres_tables,
         op_kwargs={
             "postgres_conn_id": "postgres_bronze",
-            "ddl_path": "dags/utils/sql/ddl_pg_bronze_details.sql"
+            "ddl_path": str(SQL_DIR / "ddl_pg_bronze_details.sql")
         }
     )
 

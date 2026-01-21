@@ -4,6 +4,7 @@ from airflow.models import Variable
 from airflow.utils.trigger_rule import TriggerRule
 
 from datetime import datetime
+from pathlib import Path
 
 import utils.natalia_hh_postgres as pg_utils
 
@@ -21,6 +22,10 @@ with DAG(
     catchup=True,
     max_active_runs=1,
 ) as dag:
+    
+
+    BASE_DIR = Path(__file__).resolve().parent
+    SQL_DIR = BASE_DIR / "utils" / "sql"
 
     # Создаем при необходимости таблицу в постгрес
     init_postgres_tables_task = PythonOperator(
@@ -28,7 +33,7 @@ with DAG(
         python_callable=pg_utils.init_postgres_tables,
         op_kwargs={
             "postgres_conn_id": "postgres_bronze",
-            "ddl_path": "dags/utils/sql/ddl_pg_bronze.sql"
+            "ddl_path": str(SQL_DIR / "ddl_pg_bronze.sql")
         }
     )
 
