@@ -18,6 +18,7 @@ with DAG(
 ) as dag:
 
     silver_load_task_ids = []
+    silver_load_tasks = []
 
     for table in SILVER_TABLES:
         table_name = table["name"]
@@ -42,11 +43,14 @@ with DAG(
             }
         )
 
-        telegram_notify_task = PythonOperator(
-            task_id="send_telegram_notification",
-            python_callable=send_telegram_notification,
-            op_kwargs={"watched_tasks": silver_load_task_ids},
-            trigger_rule=TriggerRule.ALL_DONE,  
-        )
+        init_postgres_tables_task >> load_to_postgres_task
+        silver_load_tasks.append(load_to_postgres_task)
 
-        init_postgres_tables_task >> load_to_postgres_task >> telegram_notify_task
+    telegram_notify_task = PythonOperator(
+        task_id="send_telegram_notification",
+        python_callable=send_telegram_notification,
+        op_kwargs={"watched_tasks": silver_load_task_ids},
+        trigger_rule=TriggerRule.ALL_DONE,  
+    )
+
+    silver_load_tasks >> telegram_notify_task
