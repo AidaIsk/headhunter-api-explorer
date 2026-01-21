@@ -21,8 +21,9 @@ with DAG(
     dag_id="aida_hh_details_daily",
     default_args=default_args,
     start_date=datetime(2024, 1, 1),
-    schedule_interval="@daily",
+    schedule_interval=None,
     catchup=False,
+    max_active_runs = 1,
     tags=["aida", "hh_details", "daily"],
 ) as dag:
     
