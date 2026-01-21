@@ -4,8 +4,7 @@ from airflow.models import Variable
 from airflow.utils.trigger_rule import TriggerRule
 
 from datetime import datetime
-import requests
-import logging
+from pathlib import Path
 
 import utils.natalia_hh_postgres as pg_utils
 
@@ -34,8 +33,8 @@ with DAG(
         op_kwargs={
             "postgres_conn_id": "postgres_bronze",
             "ddl_path": str(SQL_DIR / "ddl_pg_bronze_details.sql")
-        }
-    )
+        }"
+    )"
 
     # Проверяем новые файлы в MinIO
     check_new_files_task = PythonOperator(

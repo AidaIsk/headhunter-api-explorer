@@ -33,7 +33,8 @@ with DAG(
         python_callable=pg_utils.init_postgres_tables,
         op_kwargs={
             "postgres_conn_id": "postgres_bronze",
-            "ddl_path": str(SQL_DIR / "ddl_pg_bronze.sql")
+            "ddl_path": str(SQL_DIR / "ddl_pg_bronze.sql
+            ")
         }
     )
 
