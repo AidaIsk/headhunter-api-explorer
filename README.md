@@ -7,7 +7,7 @@ End-to-end Data Engineering пайплайн для сбора и подгото
 
 **Поток данных:**
 
-HeadHunter API → Airflow → MinIO (Bronze) → Postgres → dbt (планируется) → BI (планируется)
+HeadHunter API → Airflow → MinIO (Bronze) → Postgres (Landing / Staging) → dbt (Staging → Silver → Gold) → BI
 
 Проект демонстрирует практический, приближённый к продакшену подход к построению data-платформ:
 - слоистая архитектура  
@@ -21,7 +21,7 @@ HeadHunter API → Airflow → MinIO (Bronze) → Postgres → dbt (планир
 - MinIO (S3-совместимое хранилище)  
 - Postgres  
 - Docker  
-- dbt (планируется)
+- dbt (используется для staging и аналитических слоёв)
 
 ---
 
@@ -53,11 +53,11 @@ MinIO (Bronze слой, JSONL, партиционирование по дате)
       ↓
 Airflow (загрузка и проверки)
       ↓
-Postgres (raw / staging)
+Postgres (Landing / Staging)
       ↓
-dbt (Silver / Gold слои) — планируется
+dbt (Staging → Silver → Gold)
       ↓
-BI / дашборды — планируется
+BI / дашборды
 ```
 
 ---
@@ -71,6 +71,54 @@ BI / дашборды — планируется
 - Все пайплайны идемпотентны
 - Контроль покрытия и качества данных обязателен
 - Обогащённые записи self-contained и трассируемы
+
+---
+
+## Architecture & Ownership
+
+Проект спроектирован как production-like платформа данных
+с чётким разделением ответственности между ingestion,
+технической нормализацией и аналитическим моделированием.
+
+Архитектура построена по принципу Medallion:
+Bronze → Staging → Silver → Gold.
+
+### Архитектура верхнего уровня
+
+• Source of Truth:
+  – MinIO используется для хранения неизменяемого Bronze-слоя (raw JSONL)
+  – PostgreSQL применяется как Landing-слой и аналитическое хранилище
+
+• Оркестрация:
+  – Airflow отвечает исключительно за оркестрацию пайплайнов
+  – Логика ingestion строго отделена от трансформаций
+
+• Трансформации:
+  – dbt используется только для детерминированных трансформаций данных
+  – dbt не участвует в процессе ingestion
+
+---
+
+### Зоны ответственности
+
+**Aida Iskakova — Architecture / Data Engineering / Compliance**
+
+• Архитектура ingestion и дизайн пайплайнов  
+• Manifest-based ingestion (контроль Expected vs Loaded)  
+• Логика покрытия и severity (OK / WARNING / CRITICAL)  
+• Контракты входных данных для dbt (sources)  
+• Полная ответственность за staging-слой (техническая нормализация без бизнес-логики)  
+• Обеспечение принципов immutability, idempotency и observability  
+
+**Natalia Tarasova — Analytics Engineering / Monitoring**
+
+• Silver-слой (бизнес-сущности)  
+• Risk flags и compliance-ориентированная логика  
+• Gold-слой (аналитические витрины)  
+• Алертинг и мониторинг состояния данных и пайплайнов  
+
+Такое разделение ответственности обеспечивает архитектурную прозрачность,
+контролируемую эволюцию платформы и командное владение системой.
 
 ---
 
@@ -145,7 +193,7 @@ BI / дашборды — планируется
 │   ├── aida_hh_init.py             # Инициализация (init / backfill сценарии)
 │   ├── aida_hh_daily_dag.py        # Daily DAG: сбор списка вакансий (IDs)
 │   ├── aida_hh_details_daily_dag.py# Daily DAG: enrichment вакансий (details)
-│   ├── natalia_hh_postgres_dag.py  # Загрузка Bronze → Postgres (raw/staging)
+│   ├── natalia_hh_postgres_dag.py  # Загрузка Bronze → Postgres (Landing / Staging)
 │   ├── test_dag.py                 # Тестовый / экспериментальный DAG
 │   │
 │   ├── data/
@@ -174,19 +222,11 @@ BI / дашборды — планируется
 ├── .gitignore
 └── README.md
 ```
-##  Команда и зоны ответственности
-### Aida Iskakova
-- Архитектура пайплайна
-- Ingestion: HH API → MinIO (Bronze)
-- Обогащение данных деталей вакансий
-- Контроль качества и покрытия данных
-- Формирование compliance-требований к данным
+## Команда проекта
 
-### Natalia Tarasova
-- Загрузка данных из Bronze в Postgres
-- dbt-модели Silver / Gold
-- Агрегации и аналитические датасеты
-- Мониторинг и алерты
+Проект реализуется в формате командной разработкии с чётко зафиксированными зонами архитектурной и аналитической ответственности.
+
+Подробное разделение ролей, архитектурных обязанностей и контрактов между слоями описано в разделе **Architecture & Ownership**.
 
 ---
 
