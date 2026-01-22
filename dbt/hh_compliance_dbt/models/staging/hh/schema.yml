@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: stg_hh__vacancy_details
+    description: "Staging view for HH vacancy details from Bronze. No business logic; only column selection + traceability metadata."
+    columns:
+      - name: vacancy_id
+        description: "HH vacancy id (business key)."
+        tests:
+          - not_null
+          - unique
+
+      - name: load_dt
+        description: "Logical load date of ingestion batch (used for replay / partitioning)."
+        tests:
+          - not_null
+
+      - name: search_profile
+        description: "Search profile tag injected during ingestion (config-driven)."
+
+      - name: expected_risk_category
+        description: "Expected risk category injected during ingestion (compliance labeling)."
