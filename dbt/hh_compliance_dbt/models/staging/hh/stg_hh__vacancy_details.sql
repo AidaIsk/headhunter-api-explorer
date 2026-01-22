@@ -37,4 +37,4 @@ with src as (
 
 )
 
-select * from src;
+select * from src
