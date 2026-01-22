@@ -86,16 +86,16 @@ Bronze → Staging → Silver → Gold.
 ### Архитектура верхнего уровня
 
 • Source of Truth:
-  – MinIO используется для хранения неизменяемого Bronze-слоя (raw JSONL)
-  – PostgreSQL применяется как Landing-слой и аналитическое хранилище
+  - MinIO используется для хранения неизменяемого Bronze-слоя (raw JSONL)
+  - PostgreSQL применяется как Landing-слой и аналитическое хранилище
 
 • Оркестрация:
-  – Airflow отвечает исключительно за оркестрацию пайплайнов
-  – Логика ingestion строго отделена от трансформаций
+  - Airflow отвечает исключительно за оркестрацию пайплайнов
+  - Логика ingestion строго отделена от трансформаций
 
 • Трансформации:
-  – dbt используется только для детерминированных трансформаций данных
-  – dbt не участвует в процессе ingestion
+  - dbt используется только для детерминированных трансформаций данных
+  - dbt не участвует в процессе ingestion
 
 ---
 
@@ -104,21 +104,20 @@ Bronze → Staging → Silver → Gold.
 **Aida Iskakova — Architecture / Data Engineering / Compliance**
 
 • Архитектура ingestion и дизайн пайплайнов  
-• Manifest-based ingestion (контроль Expected vs Loaded)  
-• Логика покрытия и severity (OK / WARNING / CRITICAL)  
-• Контракты входных данных для dbt (sources)  
-• Полная ответственность за staging-слой (техническая нормализация без бизнес-логики)  
-• Обеспечение принципов immutability, idempotency и observability  
+• Manifest-based ingestion и контроль полноты данных (Expected vs Loaded)  
+• Логика observability: coverage, severity (OK / WARNING / CRITICAL)  
+• Формирование и поддержка контрактов входных данных для dbt (sources)  
+• Полная ответственность за staging-слой (техническая нормализация, без бизнес-логики)  
+• Обеспечение принципов immutability, idempotency и воспроизводимости пайплайнов  
 
 **Natalia Tarasova — Analytics Engineering / Monitoring**
 
-• Silver-слой (бизнес-сущности)  
-• Risk flags и compliance-ориентированная логика  
-• Gold-слой (аналитические витрины)  
-• Алертинг и мониторинг состояния данных и пайплайнов  
-
-Такое разделение ответственности обеспечивает архитектурную прозрачность,
-контролируемую эволюцию платформы и командное владение системой.
+• Проектирование аналитической модели данных (Silver-слой)  
+• Реализация бизнес-сущностей и связей между ними  
+• Разработка compliance- и risk-oriented логики (risk flags)  
+• Построение Gold-слоя и аналитических витрин  
+• Настройка алертинга и мониторинга качества данных  
+• Контроль стабильности и корректности downstream-слоёв  
 
 ---
 
@@ -185,6 +184,8 @@ Bronze → Staging → Silver → Gold.
 
 ##  Структура репозитория
 ```text
+## Структура репозитория
+
 .
 ├── configs/
 │   └── search_profiles.yaml        # Конфигурация поисковых профилей (data-driven ingestion)
@@ -196,25 +197,33 @@ Bronze → Staging → Silver → Gold.
 │   ├── natalia_hh_postgres_dag.py  # Загрузка Bronze → Postgres (Landing / Staging)
 │   ├── test_dag.py                 # Тестовый / экспериментальный DAG
 │   │
-│   ├── data/
-│   │   ├── hh_vacancies.csv        # Тестовые / вспомогательные данные
-│   │   └── .gitkeep
-│   │
 │   ├── utils/
-│   │   ├── __init__.py
 │   │   ├── aida_hh_api.py          # Работа с HH API (requests, rate limits)
 │   │   ├── aida_hh_minio.py        # Клиенты и операции с MinIO
-│   │   ├── hh_ids.py               # Сбор и хранение списка vacancy IDs
-│   │   ├── hh_details.py           # Сбор vacancy details + coverage / failures
+│   │   ├── hh_ids.py               # Формирование manifest (vacancy IDs)
+│   │   ├── hh_details.py           # Enrichment + coverage / failure tracking
 │   │   ├── search_profiles.py      # Загрузка и обработка search_profiles.yaml
-│   │   ├── hh_loader_s3.py          # Загрузка данных из MinIO
-│   │   ├── hh_loader_csv.py         # CSV-loader (вспомогательно)
-│   │   ├── ddl_pg_bronze.sql        # DDL для raw/bronze слоя в Postgres
-│   │   └── natalia_hh_postgres.py   # Логика загрузки данных в Postgres
+│   │   └── natalia_hh_postgres.py  # Логика загрузки данных в Postgres
 │   │
 │   └── legacy/
 │       ├── aida_hh_init_dag.py      # Устаревшие DAG'и (сохранены для истории)
 │       └── minio_pandas_dag.py
+│
+├── dbt/
+│   └── hh_compliance_dbt/
+│       ├── dbt_project.yml
+│       ├── packages.yml
+│       ├── models/
+│       │   ├── staging/
+│       │   │   └── hh/
+│       │   │       ├── stg_hh__vacancy_details.sql
+│       │   │       ├── stg_hh__employers.sql
+│       │   │       ├── stg_hh__vacancy_skills.sql
+│       │   │       └── stg_hh__vacancy_text.sql
+│       │   ├── silver/             # Бизнес-сущности (в разработке)
+│       │   └── gold/               # Аналитические витрины (в разработке)
+│       │
+│       └── tests/                  # dbt tests (schema / data tests)
 │
 ├── Dockerfile                      # Docker-образ Airflow
 ├── docker-compose.yml              # Локальный запуск Airflow + MinIO + Postgres
@@ -222,6 +231,9 @@ Bronze → Staging → Silver → Gold.
 ├── .gitignore
 └── README.md
 ```
+
+dbt-часть проекта вынесена в отдельную директорию и логически отделена от ingestion-кода, что отражает разделение ответственности между сбором данных и аналитическим моделированием.
+
 ## Команда проекта
 
 Проект реализуется в формате командной разработкии с чётко зафиксированными зонами архитектурной и аналитической ответственности.
