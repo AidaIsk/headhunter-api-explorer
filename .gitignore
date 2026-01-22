@@ -51,4 +51,6 @@ docker-compose.local.yml
 
 # Прочее
 manual_test_funct/
-
+dbt/**/target/
+dbt/**/logs/
+dbt/**/dbt_packages/
