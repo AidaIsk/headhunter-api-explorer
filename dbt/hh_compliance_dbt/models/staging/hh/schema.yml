@@ -20,3 +20,20 @@ models:
 
       - name: expected_risk_category
         description: "Expected risk category injected during ingestion (compliance labeling)."
+  - name: stg_hh__employers
+    description: "Staging view for employers extracted from vacancy_details.employer_json. One row per employer_id (latest by load_dt/inserted_at)."
+    columns:
+      - name: employer_id
+        description: "HH employer id (business key)."
+        tests:
+          - not_null
+          - unique
+
+      - name: employer_name
+        description: "Employer name."
+
+      - name: source_load_dt
+        description: "Logical load date used to choose latest employer record."
+        tests:
+          - not_null
+
