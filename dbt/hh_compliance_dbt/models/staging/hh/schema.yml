@@ -55,3 +55,17 @@ models:
         tests:
           - not_null
 
+  - name: stg_hh__vacancy_text
+    description: "Staging view for vacancy text. Stores raw + cleaned text for downstream compliance rules. One row per vacancy_id."
+    columns:
+      - name: vacancy_id
+        description: "HH vacancy id."
+        tests:
+          - not_null
+          - unique
+
+      - name: source_load_dt
+        description: "Logical load date for lineage."
+        tests:
+          - not_null
+
