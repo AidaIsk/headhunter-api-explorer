@@ -37,3 +37,21 @@ models:
         tests:
           - not_null
 
+  - name: stg_hh__vacancy_skills
+    description: "Staging view: exploded skills from vacancy_details.key_skills_json. Grain: one row per (vacancy_id, skill_name)."
+    columns:
+      - name: vacancy_id
+        description: "HH vacancy id."
+        tests:
+          - not_null
+
+      - name: skill_name
+        description: "Skill name from HH key_skills array."
+        tests:
+          - not_null
+
+      - name: source_load_dt
+        description: "Logical load date for lineage."
+        tests:
+          - not_null
+
