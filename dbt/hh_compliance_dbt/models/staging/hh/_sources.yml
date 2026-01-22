@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: hh_bronze
+    description: "HeadHunter Bronze layer in Postgres. Immutable raw records loaded from MinIO."
+
+    database: mydb
+    schema: bronze
+
+    tables:
+      - name: hh_vacancies_details_bronze
+        description: "Vacancy details raw records (JSON/JSONB) + ingestion metadata (run_id/load_dt/etc.)."
