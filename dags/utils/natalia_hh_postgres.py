@@ -12,6 +12,9 @@ import requests
 
 from utils.aida_hh_minio import get_s3_client
 
+BASE_DIR = Path(__file__).resolve().parent
+SQL_DIR = BASE_DIR / "utils" / "sql"
+
 # создание таблицы в постгрес для сырых данных 
 def init_postgres_tables(postgres_conn_id: str, ddl_path: str):
 
