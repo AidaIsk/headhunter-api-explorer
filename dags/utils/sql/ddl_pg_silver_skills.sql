@@ -1,4 +1,6 @@
-CREATE TABLE silver.vacancy_skills (
+CREATE SCHEMA IF NOT EXISTS silver;
+
+CREATE TABLE IF NOT EXISTS silver.vacancy_skills (
     vacancy_id     BIGINT NOT NULL,
     skill_name     TEXT NOT NULL,
     load_dt        DATE NOT NULL,

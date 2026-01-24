@@ -2,7 +2,7 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from bs4 import BeautifulSoup
 from datetime import datetime
 
-def load_silver_vacancies(load_date):
+def load_silver_vacancies(load_dt):
     
     load_dt = load_dt.date()
 
@@ -78,7 +78,7 @@ def load_silver_vacancies(load_date):
     conn.close()
 
 
-def load_silver_employers(load_date):
+def load_silver_employers(load_dt):
 
     load_dt = load_dt.date()
 
@@ -133,7 +133,7 @@ def load_silver_employers(load_date):
 
 
 
-def load_silver_vacancy_skills(load_date):
+def load_silver_vacancy_skills(load_dt):
 
     load_dt = load_dt.date()
 
@@ -170,7 +170,7 @@ def load_silver_vacancy_skills(load_date):
 
 
 
-def load_silver_vacancy_text(load_date):
+def load_silver_vacancy_text(load_dt):
 
     load_dt = load_dt.date()
     

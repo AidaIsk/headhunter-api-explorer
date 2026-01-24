@@ -1,4 +1,6 @@
-CREATE TABLE silver.employers (
+CREATE SCHEMA IF NOT EXISTS silver;
+
+CREATE TABLE IF NOT EXISTS silver.employers (
     employer_id                 BIGINT PRIMARY KEY,
     name                        TEXT NOT NULL,
     url                         TEXT,
