@@ -43,7 +43,7 @@ with DAG(
             task_id=load_task_id,
             python_callable=table['load_func'],
             op_kwargs={
-                "load_dt": "{{ execution_date }}"
+                "load_dt": "{{ ds }}"
             }
         )
 
