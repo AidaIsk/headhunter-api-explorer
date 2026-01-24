@@ -1,6 +1,6 @@
 CREATE SCHEMA IF NOT EXISTS silver;
 
-CREATE TABLE silver.vacancies (
+CREATE TABLE IF NOT EXISTS silver.vacancies (
     vacancy_id              BIGINT PRIMARY KEY,
     title                   TEXT NOT NULL,
     published_at            TIMESTAMP NOT NULL,
