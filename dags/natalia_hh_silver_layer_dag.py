@@ -3,6 +3,7 @@ from airflow.operators.python import PythonOperator
 from airflow.utils.trigger_rule import TriggerRule
 
 from datetime import datetime
+from pathlib import Path
 
 from utils.silver_config import SILVER_TABLES
 from utils.natalia_hh_pg_silver import load_silver_vacancies, load_silver_employers, load_silver_vacancy_skills, load_silver_vacancy_text
@@ -16,6 +17,9 @@ with DAG(
     catchup=True,
     max_active_runs=1,
 ) as dag:
+    
+    BASE_DIR = Path(__file__).resolve().parent
+    SQL_DIR = BASE_DIR / "utils" / "sql"
 
     silver_load_task_ids = []
     silver_load_tasks = []
@@ -31,7 +35,7 @@ with DAG(
             python_callable=init_postgres_tables,
             op_kwargs={
                 "postgres_conn_id": "postgres_bronze",
-                "ddl_path": f"dags/utils/sql/ddl_pg_silver_{table['ddl']}"
+                "ddl_path": str(SQL_DIR / f"ddl_pg_silver_{table['ddl']}")
             }
         )
 
