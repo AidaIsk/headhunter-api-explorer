@@ -31,7 +31,7 @@ with DAG(
             python_callable=init_postgres_tables,
             op_kwargs={
                 "postgres_conn_id": "postgres_bronze",
-                "ddl_path": f"dags/utils/sql/{table['ddl']}"
+                "ddl_path": f"dags/utils/sql/ddl_pg_silver_{table['ddl']}"
             }
         )
 
