@@ -108,7 +108,7 @@ def load_silver_employers(load_dt: str):
         GROUP BY
             (b.employer->>'id')::bigint,
             b.employer->>'name',
-            b.employer->>'alternate_url',
+            b.employer->>'url',
             (b.employer->>'trusted')::boolean,
             (b.employer->>'accredited_it_employer')::boolean,
             (b.employer->>'country_id')::int
