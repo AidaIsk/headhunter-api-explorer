@@ -19,9 +19,30 @@ CREATE TABLE IF NOT EXISTS silver.vacancies (
     experience              TEXT,
 
     archived                BOOLEAN NOT NULL,
+    active_from             DATE,
+    active_to               DATE,
 
     search_profile          TEXT,
     expected_risk_category  TEXT,
 
     load_dt                 DATE NOT NULL
 );
+
+    vacancy_id,
+            title,
+            published_at,
+            area_id,
+            area_name,
+            employer_id,
+            salary_from,
+            salary_to,
+            salary_currency,
+            schedule,
+            employment,
+            experience,
+            archived,
+            active_from,
+            active_to,
+            load_dt,
+            search_profile,
+            expected_risk_category
