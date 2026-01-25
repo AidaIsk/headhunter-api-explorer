@@ -28,21 +28,4 @@ CREATE TABLE IF NOT EXISTS silver.vacancies (
     load_dt                 DATE NOT NULL
 );
 
-    vacancy_id,
-            title,
-            published_at,
-            area_id,
-            area_name,
-            employer_id,
-            salary_from,
-            salary_to,
-            salary_currency,
-            schedule,
-            employment,
-            experience,
-            archived,
-            active_from,
-            active_to,
-            load_dt,
-            search_profile,
-            expected_risk_category
+    
