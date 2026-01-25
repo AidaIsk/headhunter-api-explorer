@@ -2,9 +2,7 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from bs4 import BeautifulSoup
 from datetime import datetime
 
-def load_silver_vacancies(load_dt):
-    
-    load_dt = load_dt.date()
+def load_silver_vacancies(load_dt: str):
 
     hook = PostgresHook(postgres_conn_id="postgres_bronze")
     conn = hook.get_conn()
@@ -72,15 +70,13 @@ def load_silver_vacancies(load_dt):
             expected_risk_category = EXCLUDED.expected_risk_category;
     """
 
-    cur.execute(sql)
+    cur.execute(sql, (load_dt,))
     conn.commit()
     cur.close()
     conn.close()
 
 
-def load_silver_employers(load_dt):
-
-    load_dt = load_dt.date()
+def load_silver_employers(load_dt: str):
 
     hook = PostgresHook(postgres_conn_id="postgres_bronze")
     conn = hook.get_conn()
@@ -126,16 +122,14 @@ def load_silver_employers(load_dt):
             last_seen_dt  = GREATEST(silver.employers.last_seen_dt, EXCLUDED.last_seen_dt);
     """
 
-    cur.execute(sql)
+    cur.execute(sql, (load_dt,))
     conn.commit()
     cur.close()
     conn.close()
 
 
 
-def load_silver_vacancy_skills(load_dt):
-
-    load_dt = load_dt.date()
+def load_silver_vacancy_skills(load_dt: str):
 
     hook = PostgresHook(postgres_conn_id="postgres_bronze")
     conn = hook.get_conn()
@@ -162,7 +156,7 @@ def load_silver_vacancy_skills(load_dt):
         ON CONFLICT (vacancy_id, skill_name) DO NOTHING;
     """
 
-    cur.execute(sql)
+    cur.execute(sql, (load_dt,))
     conn.commit()
     cur.close()
     conn.close()
@@ -170,9 +164,7 @@ def load_silver_vacancy_skills(load_dt):
 
 
 
-def load_silver_vacancy_text(load_dt):
-
-    load_dt = load_dt.date()
+def load_silver_vacancy_text(load_dt: str):
     
     hook = PostgresHook(postgres_conn_id="postgres_bronze")
     conn = hook.get_conn()
@@ -185,7 +177,7 @@ def load_silver_vacancy_text(load_dt):
             b.load_dt AS load_dt
         FROM bronze.hh_vacancies_bronze b
         WHERE b.load_dt = %s
-    """)
+    """, (load_dt,))
 
     rows = cur.fetchall()
     data_to_insert = []
