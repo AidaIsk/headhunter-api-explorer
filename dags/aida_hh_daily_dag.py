@@ -3,6 +3,7 @@ from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.utils.trigger_rule import TriggerRule
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
 from utils.hh_ids import build_vacancies_ids_manifest
 from utils.aida_hh_minio import pipeline_hh_to_bronze_json
@@ -40,6 +41,15 @@ with DAG(
             "load_type": "daily",
         },
     )
+    trigger_details_dag = TriggerDagRunOperator(
+        task_id="trigger_hh_details_dag",
+        trigger_dag_id="aida_hh_details_daily",
+        conf={
+            "ds": "{{ ds }}", 
+            "load_type": "daily",
+        },
+        wait_for_completion=False,
+    )
     telegram_notify_task = PythonOperator(
         task_id='send_telegram_notification',
         python_callable=pg_utils.send_telegram_notification,
@@ -47,4 +57,4 @@ with DAG(
         trigger_rule=TriggerRule.ALL_DONE
     )
 
-    collect_bronze_json >> build_vacancies_ids >> telegram_notify_task
+    collect_bronze_json >> build_vacancies_ids >> trigger_details_dag >> telegram_notify_task
