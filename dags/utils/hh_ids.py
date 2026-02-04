@@ -3,6 +3,10 @@ import boto3
 import os
 import json
 
+from airflow.exceptions import AirflowSkipException
+import os
+import logging
+
 
 def get_s3_client():
 
@@ -54,3 +58,38 @@ def build_vacancies_ids_manifest(ds, load_type, **context):
     s3_client.upload_file(local_path, minio_bucket, object_key)
 
     return f"s3://{minio_bucket}/{object_key}"
+
+def guard_has_ids(ds, load_type, **context):
+
+    minio_bucket = os.getenv("MINIO_BUCKET")
+
+    manifest_key = (
+        f"bronze/hh/vacancies_ids/"
+        f"load_type={load_type}/dt={ds}/part-000.jsonl"
+    )
+
+    s3_client = get_s3_client()
+
+    try:
+        s3_client.head_object(
+            Bucket=minio_bucket,
+            Key=manifest_key
+        )
+        logging.info(
+            f"Manifest found: s3://{minio_bucket}/{manifest_key}"
+        )
+
+    except s3_client.exceptions.NoSuchKey:
+        logging.warning(
+            f"Manifest NOT found for ds={ds}, load_type={load_type}. "
+            "Skipping enrichment DAG."
+        )
+        raise AirflowSkipException(
+            f"No vacancies_ids manifest for ds={ds}"
+        )
+
+    except Exception as e:
+        logging.error(
+            f"Error while checking manifest existence: {e}"
+        )
+        raise

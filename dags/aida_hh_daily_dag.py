@@ -1,10 +1,7 @@
 from datetime import datetime
-import requests
-import logging
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.models import Variable
 from airflow.utils.trigger_rule import TriggerRule
 
 from utils.hh_ids import build_vacancies_ids_manifest
@@ -22,6 +19,7 @@ with DAG(
     default_args=default_args,
     start_date=datetime(2024, 1, 1),
     schedule_interval="@daily",
+    max_active_runs=1,
     catchup=False,
     tags=["aida", "hh", "daily"],
 ) as dag:

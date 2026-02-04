@@ -1,14 +1,12 @@
 from datetime import datetime
-import requests
-import logging
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.utils.trigger_rule import TriggerRule
-from airflow.models import Variable
 
 from utils.hh_details import build_details_coverage_report
 from utils.hh_details import collect_vacancy_details
+from utils.hh_ids import guard_has_ids
 import utils.natalia_hh_postgres as pg_utils
 
 default_args = {
@@ -27,6 +25,14 @@ with DAG(
     tags=["aida", "hh_details", "daily"],
 ) as dag:
     
+    guard_has_ids_task = PythonOperator(
+        task_id="guard_has_ids",
+        python_callable=guard_has_ids,
+        op_kwargs={
+            "ds": "{{ ds }}",
+            "load_type": "daily",
+        },
+    )
     collect_vacancy_details_task = PythonOperator(
         task_id="collect_vacancy_details",
         python_callable=collect_vacancy_details,
@@ -52,4 +58,5 @@ with DAG(
     )
     
 
-    collect_vacancy_details_task >> build_details_coverage_report_task >> telegram_notify_task
+guard_has_ids_task >> collect_vacancy_details_task
+collect_vacancy_details_task >> build_details_coverage_report_task >> telegram_notify_task

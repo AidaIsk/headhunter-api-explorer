@@ -375,7 +375,6 @@ def build_details_coverage_report(ds: str, load_type: str, **context) -> str:
     print(f"[coverage_report] saved: {s3_path}")
     return s3_path
 
-
 def collect_vacancy_details(ds: str, load_type: str, batch_size: int = 200) -> None:
     expected_rows = load_vacancy_ids(ds, load_type)
     batches = split_into_batches(expected_rows, batch_size=batch_size)
