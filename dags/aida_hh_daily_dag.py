@@ -48,6 +48,7 @@ with DAG(
             "ds": "{{ ds }}", 
             "load_type": "daily",
         },
+        reset_dag_run=True,
         wait_for_completion=False,
     )
     telegram_notify_task = PythonOperator(
