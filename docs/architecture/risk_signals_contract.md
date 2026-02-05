@@ -1,50 +1,104 @@
-# Risk Signals — Canonical Contract (v1)
+# Контракт Risk Signals — v1
 
-## Purpose
+## Назначение документа
 
-This document defines the canonical representation of a Risk Signal
-as a Gold-level analytical artifact.
+Данный документ определяет **каноническое представление Risk Signal**
+как аналитического артефакта **Gold-уровня**.
 
-Risk Signals are designed not as classification flags,
-but as operational signals that:
-- are measurable
-- trigger downstream actions
-- can be monitored and analyzed over time
+Risk Signals проектируются **не как классификационные флаги**,
+а как **операционные сигналы**, которые:
 
-## Logical Entity: Risk Signal
+- являются измеримыми
+- запускают downstream-действия
+- поддаются мониторингу и аналитике во времени
 
-A Risk Signal represents a single detected risk condition
-for a vacancy at a given point in time.
+Документ фиксирует целевую модель Risk Signals,
+которая используется как архитектурный контракт между
+ingestion, аналитическими и мониторинговыми слоями.
 
-### Core Identifiers
+---
 
-- vacancy_id
-- load_dt
+## Логическая сущность: Risk Signal
 
-### Signal Attributes
+**Risk Signal** — это зафиксированное условие риска,
+обнаруженное для конкретной вакансии
+в определённый момент времени.
 
-- risk_signal_name        (string, snake_case)
-- risk_signal_type        (content_based / employer_based / behavior_based / technical)
-- severity                (informational / warning / critical)
-- blocking                (boolean)
+Risk Signal рассматривается как самостоятельная
+операционная сущность, а не как вспомогательный атрибут.
 
-### Signal Value
+---
 
-- signal_value            (boolean / numeric / categorical)
-- risk_domain             (crypto / gambling / payments / baseline)
+## Ключевые идентификаторы
 
-### Operational Semantics
+- `vacancy_id` — идентификатор вакансии  
+- `load_dt` — дата загрузки (контекст времени)
 
-- downstream_action       (monitor / analytics / alert / manual_review)
+---
 
-### Observability & Analysis
+## Атрибуты сигнала
 
-- false_positive_note     (free text, optional)
+- `risk_signal_name`  
+  *(string, snake_case)*  
+  Уникальное машинно-читаемое имя сигнала
 
-## Notes
+- `risk_signal_type`  
+  *(content_based / employer_based / behavior_based / technical)*  
+  Тип сигнала по источнику риска
 
-- Not all fields are required to be implemented in Risk Signals v1.
-- The initial implementation may aggregate signals into boolean flags
-  at the vacancy level.
-- This contract defines the long-term target model for Risk Signals
-  as first-class operational entities.
+- `severity`  
+  *(informational / warning / critical)*  
+  Уровень серьёзности сигнала
+
+- `blocking`  
+  *(boolean)*  
+  Является ли сигнал блокирующим для процесса
+
+---
+
+## Значение сигнала
+
+- `signal_value`  
+  *(boolean / numeric / categorical)*  
+  Фактическое значение сигнала
+
+- `risk_domain`  
+  *(crypto / gambling / payments / baseline)*  
+  Домен риска, к которому относится сигнал
+
+---
+
+## Операционная семантика
+
+- `downstream_action`  
+  *(monitor / analytics / alert / manual_review)*  
+
+Определяет, какое действие должно быть инициировано
+в downstream-процессах при срабатывании сигнала.
+
+---
+
+## Наблюдаемость и анализ
+
+- `false_positive_note`  
+  *(text, optional)*  
+
+Свободное текстовое поле для фиксации
+наблюдений о ложных срабатываниях,
+используется для ретроспективного анализа
+и улучшения risk logic.
+
+---
+
+## Примечания
+
+- Не все поля обязательны для реализации в **Risk Signals v1**.
+- Начальная реализация может агрегировать сигналы
+  в виде boolean-флагов на уровне вакансии.
+- Данный контракт определяет **долгосрочную целевую модель**
+  Risk Signals как **первоклассных операционных сущностей**
+  в системе.
+
+Документ используется как архитектурный ориентир
+и может эволюционировать по мере развития
+risk logic и аналитических сценариев.
