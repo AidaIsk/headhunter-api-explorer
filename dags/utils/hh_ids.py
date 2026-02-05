@@ -4,7 +4,8 @@ import os
 import json
 
 from airflow.exceptions import AirflowSkipException
-import os
+from botocore.exceptions import ClientError
+
 import logging
 
 
@@ -79,16 +80,18 @@ def guard_has_ids(ds, load_type, **context):
             f"Manifest found: s3://{minio_bucket}/{manifest_key}"
         )
 
-    except s3_client.exceptions.NoSuchKey:
-        logging.warning(
-            f"Manifest NOT found for ds={ds}, load_type={load_type}. "
-            "Skipping enrichment DAG."
-        )
-        raise AirflowSkipException(
-            f"No vacancies_ids manifest for ds={ds}"
-        )
+    except ClientError as e:
+        error_code = e.response.get("Error", {}).get("Code")
 
-    except Exception as e:
+        if error_code == "404":
+            logging.warning(
+                f"Manifest NOT found for ds={ds}, load_type={load_type}. "
+                "Skipping enrichment DAG."
+            )
+            raise AirflowSkipException(
+                f"No vacancies_ids manifest for ds={ds}"
+            )
+
         logging.error(
             f"Error while checking manifest existence: {e}"
         )
