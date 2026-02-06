@@ -19,7 +19,7 @@ with DAG(
     dag_id="aida_hh_details_daily",
     default_args=default_args,
     start_date=datetime(2024, 1, 1),
-    schedule_interval="@once",
+    schedule_interval=None,
     catchup=False,
     max_active_runs = 1,
     tags=["aida", "hh_details", "daily"],
@@ -29,7 +29,6 @@ with DAG(
         task_id="guard_has_ids",
         python_callable=guard_has_ids,
         op_kwargs={
-            "ds": "{{ ds }}",
             "load_type": "daily",
         },
     )
