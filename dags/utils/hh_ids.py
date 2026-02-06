@@ -60,7 +60,11 @@ def build_vacancies_ids_manifest(ds, load_type, **context):
 
     return f"s3://{minio_bucket}/{object_key}"
 
-def guard_has_ids(ds, load_type, **context):
+def guard_has_ids(load_type, **context):
+    dag_conf = context["dag_run"].conf or {}
+    ds = dag_conf.get("ds")
+    if not ds:
+        raise ValueError("ds not provided via dag_run.conf")
 
     minio_bucket = os.getenv("MINIO_BUCKET")
 
