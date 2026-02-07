@@ -45,10 +45,21 @@ def load_vacancy_ids(ds: str, load_type: str) -> List[dict]:
     minio_bucket = os.getenv("MINIO_BUCKET")
     source_key = f"bronze/hh/vacancies_ids/load_type={load_type}/dt={ds}/part-000.jsonl"
 
-    s3_client = get_s3_client()
-    response = s3_client.get_object(Bucket=minio_bucket, Key=source_key)
+    logging.info(
+        f"Loading vacancy_ids from s3://{minio_bucket}/{source_key}"
+    )
 
-    rows: List[dict] = []
+    s3_client = get_s3_client()
+    try:
+        response = s3_client.get_object(Bucket=minio_bucket, Key=source_key)
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "NoSuchKey":
+            raise AirflowSkipException(
+                f"Manifest not found for ds={ds}"
+            )
+        raise
+
+    rows: List[dict] = []   
     for line in response["Body"].iter_lines():
         if not line:
             continue
@@ -375,7 +386,12 @@ def build_details_coverage_report(ds: str, load_type: str, **context) -> str:
     print(f"[coverage_report] saved: {s3_path}")
     return s3_path
 
-def collect_vacancy_details(ds: str, load_type: str, batch_size: int = 200) -> None:
+def collect_vacancy_details(load_type: str, batch_size: int = 200, **context) -> None:
+    dag_conf = context["dag_run"].conf or {}
+    ds = dag_conf.get("ds")
+    if not ds:
+        raise ValueError("ds not provided via dag_run.conf")
+
     expected_rows = load_vacancy_ids(ds, load_type)
     batches = split_into_batches(expected_rows, batch_size=batch_size)
 
