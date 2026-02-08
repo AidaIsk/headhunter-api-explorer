@@ -104,7 +104,7 @@ def load_silver_employers(load_dt: str):
             MIN(b.load_dt)::date                       AS first_seen_dt,
             MAX(b.load_dt)::date                       AS last_seen_dt
         FROM bronze.hh_vacancies_bronze b
-        WHERE b.employer IS NOT NULL and b.load_dt = %s
+        WHERE b.employer IS NOT NULL and (b.employer->>'id') IS NOT NULL and b.load_dt = %s
         GROUP BY
             (b.employer->>'id')::bigint,
             b.employer->>'name',
