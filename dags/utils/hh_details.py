@@ -4,6 +4,7 @@ import logging
 import time
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional, Any
+from botocore.exceptions import ClientError
 
 import boto3
 import requests
@@ -290,91 +291,144 @@ def _list_all_keys(bucket: str, prefix: str) -> List[str]:
 
 def build_details_coverage_report(ds: str, load_type: str, **context) -> str:
     """
-    Coverage:
-      expected = все vacancy_id из manifest
-      loaded   = все id из vacancy_details
-      also:
-        failed_total_by_reason — сколько упало и почему (по failures файлам)
+    Coverage task:
+    - NEVER fails DAG
+    - Observes data availability and completeness
     """
 
     ti = context["ti"]
+    dag_run = context.get("dag_run")
 
-    expected_rows = load_vacancy_ids(ds, load_type)
-    expected_set = {str(row["vacancy_id"]) for row in expected_rows if row.get("vacancy_id")}
-    expected_count = len(expected_set)
+    # --- 1. Определяем бизнес-дату (важно!)
+    coverage_ds = ds
+    if dag_run and dag_run.conf and dag_run.conf.get("ds"):
+        coverage_ds = dag_run.conf["ds"]
+        logging.info(f"[coverage] using ds from dag_run.conf: {coverage_ds}")
+    else:
+        logging.warning(f"[coverage] dag_run.conf.ds not found, fallback to ds={ds}")
 
     minio_bucket = os.getenv("MINIO_BUCKET")
     s3_client = get_s3_client()
 
-    # --- loaded (details)
-    details_prefix = f"bronze/hh/vacancy_details/load_type={load_type}/dt={ds}/"
-    detail_keys = [k for k in _list_all_keys(minio_bucket, details_prefix) if k.endswith(".jsonl")]
+    # --- 2. Загружаем manifest (expected)
+    coverage_reason = "OK"
+    expected_set = set()
+
+    try:
+        expected_rows = load_vacancy_ids(coverage_ds, load_type)
+        expected_set = {
+            str(row["vacancy_id"])
+            for row in expected_rows
+            if row.get("vacancy_id")
+        }
+
+        if not expected_set:
+            coverage_reason = "EMPTY_MANIFEST"
+
+    except Exception as e:
+        logging.warning(
+            f"[coverage] manifest not available for ds={coverage_ds}: {e}"
+        )
+        coverage_reason = "NO_MANIFEST"
+
+    expected_count = len(expected_set)
+
+    # --- 3. Загружаем details (loaded)
+    details_prefix = (
+        f"bronze/hh/vacancy_details/load_type={load_type}/dt={coverage_ds}/"
+    )
+
+    detail_keys = [
+        k for k in _list_all_keys(minio_bucket, details_prefix)
+        if k.endswith(".jsonl")
+    ]
 
     loaded_set = set()
+
     for key in detail_keys:
-        obj = s3_client.get_object(Bucket=minio_bucket, Key=key)
-        for line in obj["Body"].iter_lines():
-            if not line:
-                continue
-            row = json.loads(line.decode("utf-8"))
-            if row.get("id"):
-                loaded_set.add(str(row["id"]))
+        try:
+            obj = s3_client.get_object(Bucket=minio_bucket, Key=key)
+            for line in obj["Body"].iter_lines():
+                if not line:
+                    continue
+                row = json.loads(line.decode("utf-8"))
+                if row.get("id"):
+                    loaded_set.add(str(row["id"]))
+        except Exception as e:
+            logging.warning(f"[coverage] failed to read detail file {key}: {e}")
 
     loaded_count = len(loaded_set)
+
     missing_set = expected_set - loaded_set
     missing_count = len(missing_set)
-    coverage_pct = 0.0 if expected_count == 0 else loaded_count / expected_count * 100
 
-    # --- failures breakdown (optional, но полезно)
-    failures_prefix = f"bronze/hh/vacancy_details_failures/load_type={load_type}/dt={ds}/"
-    failure_keys = [k for k in _list_all_keys(minio_bucket, failures_prefix) if k.endswith(".jsonl")]
+    coverage_pct = (
+        0.0 if expected_count == 0
+        else loaded_count / expected_count * 100
+    )
 
-    failures_by_reason: Dict[str, int] = {}
-    failures_by_status: Dict[str, int] = {}
+    # --- 4. Загружаем failures (optional)
+    failures_prefix = (
+        f"bronze/hh/vacancy_details_failures/load_type={load_type}/dt={coverage_ds}/"
+    )
+
+    failure_keys = [
+        k for k in _list_all_keys(minio_bucket, failures_prefix)
+        if k.endswith(".jsonl")
+    ]
+
+    failures_by_reason = {}
+    failures_by_status = {}
 
     for key in failure_keys:
-        obj = s3_client.get_object(Bucket=minio_bucket, Key=key)
-        for line in obj["Body"].iter_lines():
-            if not line:
-                continue
-            r = json.loads(line.decode("utf-8"))
-            reason = str(r.get("reason", "unknown"))
-            status = str(r.get("http_status", "unknown"))
-            failures_by_reason[reason] = failures_by_reason.get(reason, 0) + 1
-            failures_by_status[status] = failures_by_status.get(status, 0) + 1
+        try:
+            obj = s3_client.get_object(Bucket=minio_bucket, Key=key)
+            for line in obj["Body"].iter_lines():
+                if not line:
+                    continue
+                r = json.loads(line.decode("utf-8"))
+                reason = str(r.get("reason", "unknown"))
+                status = str(r.get("http_status", "unknown"))
+                failures_by_reason[reason] = failures_by_reason.get(reason, 0) + 1
+                failures_by_status[status] = failures_by_status.get(status, 0) + 1
+        except Exception as e:
+            logging.warning(f"[coverage] failed to read failure file {key}: {e}")
 
-    # severity логика:
-    # - OK: missing=0
-    # - WARNING: missing небольшие ИЛИ почти 100%
-    # - CRITICAL: иначе
-    severity = (
-        "OK"
-        if missing_count == 0
-        else ("WARNING" if (missing_count <= 5 or coverage_pct >= 99) else "CRITICAL")
-    )
+    # --- 5. Severity (на основе reason)
+    if coverage_reason in {"NO_MANIFEST", "EMPTY_MANIFEST"}:
+        severity = "CRITICAL"
+    elif missing_count == 0:
+        severity = "OK"
+    elif missing_count <= 5 or coverage_pct >= 99:
+        severity = "WARNING"
+    else:
+        severity = "CRITICAL"
 
-    ti.xcom_push(
-        key="severity",
-        value=severity
-    )
+    ti.xcom_push(key="severity", value=severity)
 
+    # --- 6. Report
     report = {
-        "ds": ds,
+        "ds": coverage_ds,
         "load_type": load_type,
         "expected_count": expected_count,
         "loaded_count": loaded_count,
         "missing_count": missing_count,
         "coverage_pct": coverage_pct,
+        "coverage_reason": coverage_reason,
+        "severity": severity,
         "found_files": len(detail_keys),
         "sample_missing_ids": list(sorted(missing_set)[:5]),
-        "severity": severity,
         "failures_files": len(failure_keys),
         "failures_by_reason": failures_by_reason,
         "failures_by_status": failures_by_status,
     }
 
-    object_key = f"bronze/hh/reports/vacancy_details_coverage/load_type={load_type}/dt={ds}/report.json"
-    local_path = f"/tmp/vacancy_details_coverage_{ds}_{load_type}.json"
+    object_key = (
+        f"bronze/hh/reports/vacancy_details_coverage/"
+        f"load_type={load_type}/dt={coverage_ds}/report.json"
+    )
+
+    local_path = f"/tmp/vacancy_details_coverage_{coverage_ds}_{load_type}.json"
     Path("/tmp").mkdir(parents=True, exist_ok=True)
 
     with open(local_path, "w", encoding="utf-8") as f:
@@ -383,9 +437,10 @@ def build_details_coverage_report(ds: str, load_type: str, **context) -> str:
     s3_client.upload_file(local_path, minio_bucket, object_key)
 
     s3_path = f"s3://{minio_bucket}/{object_key}"
-    print(f"[coverage_report] {json.dumps(report, ensure_ascii=False)}")
-    print(f"[coverage_report] saved: {s3_path}")
+    logging.info(f"[coverage] saved report to {s3_path}")
+
     return s3_path
+
 
 def collect_vacancy_details(load_type: str, batch_size: int = 200, **context) -> None:
     dag_conf = context["dag_run"].conf or {}
