@@ -15,9 +15,9 @@ HEADERS = {"User-Agent": "hh-remote-track/0.1 (aida.aitymova@gmail.com)"}
 
 # Политика ретраев
 MAX_RETRIES = 3
-BASE_SLEEP_SEC = 0.3  # базовая задержка между запросами
+BASE_SLEEP_SEC = 0.5  # базовая задержка между запросами
 BACKOFF_SEC = 2.0     # множитель backoff для ретраев
-
+DETAILS_BATCH_SIZE = 50
 
 def get_s3_client():
     return boto3.client(
@@ -71,7 +71,7 @@ def load_vacancy_ids(ds: str, load_type: str) -> List[dict]:
     return rows
 
 
-def split_into_batches(rows: List[dict], batch_size: int = 200) -> List[List[dict]]:
+def split_into_batches(rows: List[dict], batch_size: int = DETAILS_BATCH_SIZE) -> List[List[dict]]:
     return [rows[i: i + batch_size] for i in range(0, len(rows), batch_size)]
 
 
@@ -90,7 +90,6 @@ def _classify_http_reason(status_code: int) -> str:
 def _request_with_retries(
     session: requests.Session,
     url: str,
-    headers: dict,
     timeout: int,
 ) -> Tuple[Optional[requests.Response], Optional[str]]:
     """
@@ -101,7 +100,7 @@ def _request_with_retries(
     """
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            resp = session.get(url, headers=headers, timeout=timeout)
+            resp = session.get(url, timeout=timeout)
 
             # Небольшая пауза между запросами (бережём API)
             time.sleep(BASE_SLEEP_SEC)
@@ -111,11 +110,16 @@ def _request_with_retries(
                 return resp, None
 
             # Для 429/5xx делаем retry с backoff
-            if resp.status_code == 429 or (500 <= resp.status_code <= 599):
+            # 429 и 403 — признак блокировки, НЕ ретраим
+            if resp.status_code in (403, 429):
+                return resp, "blocked"
+
+            # 5xx — можно ретраить
+            if 500 <= resp.status_code <= 599:
                 if attempt < MAX_RETRIES:
-                    sleep_s = BACKOFF_SEC * attempt
-                    time.sleep(sleep_s)
+                    time.sleep(BACKOFF_SEC * attempt)
                     continue
+                return resp, "http_error"
 
             # Для остальных статусов — без ретрая
             return resp, "http_error"
@@ -150,6 +154,7 @@ def fetch_vacancy_details_batch(
     exception_count = 0
 
     session = requests.Session()
+    session.headers.update(HEADERS)
 
     for row in batch:
         vacancy_id = row.get("vacancy_id")
@@ -168,10 +173,27 @@ def fetch_vacancy_details_batch(
             continue
 
         url = f"{BASE_URL}/{vacancy_id}"
-        resp, err_type = _request_with_retries(session, url, HEADERS, timeout=30)
+        resp, err_type = _request_with_retries(session, url, timeout=30)
 
         # HTTP != 200 или request_exception
         if err_type is not None:
+            if err_type == "blocked":
+                failed_records.append(
+                    {
+                        "vacancy_id": str(vacancy_id),
+                        "http_status": resp.status_code if resp else "unknown",
+                        "reason": "api_blocked",
+                        "ds": ds,
+                        "load_type": load_type,
+                        "batch_idx": batch_idx,
+                    }
+                )
+                logging.warning(
+                    f"[details] API blocked on vacancy_id={vacancy_id}, "
+                    f"status={resp.status_code if resp else 'unknown'} — stopping batch"
+                )
+                return details_rows, failed_records, status_counts, exception_count
+
             if resp is not None:
                 status = resp.status_code
                 status_counts[status] = status_counts.get(status, 0) + 1
@@ -442,7 +464,7 @@ def build_details_coverage_report(ds: str, load_type: str, **context) -> str:
     return s3_path
 
 
-def collect_vacancy_details(load_type: str, batch_size: int = 200, **context) -> None:
+def collect_vacancy_details(load_type: str, batch_size = DETAILS_BATCH_SIZE, **context) -> None:
     dag_conf = context["dag_run"].conf or {}
     ds = dag_conf.get("ds")
     if not ds:
@@ -464,6 +486,10 @@ def collect_vacancy_details(load_type: str, batch_size: int = 200, **context) ->
             load_type=load_type,
             batch_idx=batch_idx,
         )
+
+        if any(r.get("reason") == "api_blocked" for r in failed_records):
+            logging.warning("[details] stopping further batches due to API block")
+            break
 
         save_details_batch_to_minio(details_rows, ds, load_type, batch_idx)
         failed_path = save_failed_records_to_minio(failed_records, ds, load_type, batch_idx)
