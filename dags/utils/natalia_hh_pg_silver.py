@@ -49,7 +49,7 @@ def load_silver_vacancies(load_dt: str):
             b.search_profile                       AS search_profile,
             b.expected_risk_category               AS expected_risk_category
         FROM bronze.hh_vacancies_bronze b
-        WHERE b.load_dt = %s
+        WHERE b.load_dt = %s and b.employer IS NOT NULL and (b.employer->>'id') IS NOT NULL
         ON CONFLICT (vacancy_id) DO UPDATE SET
             title = EXCLUDED.title,
             published_at = EXCLUDED.published_at,
