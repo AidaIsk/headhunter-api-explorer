@@ -25,7 +25,7 @@ with DAG(
             python_callable=init_postgres_tables,
             op_kwargs={
                 "postgres_conn_id": "postgres_bronze",
-                "ddl_path": str(SQL_DIR / f"ddl_pg_gold_vacancy_risk_signals")
+                "ddl_path": str(SQL_DIR / "ddl_pg_gold_vacancy_risk_signals")
             }
         )
 
