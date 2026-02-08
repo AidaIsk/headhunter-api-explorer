@@ -150,7 +150,7 @@ def load_silver_vacancy_skills(load_dt: str):
             b.vacancy_id,
             skill ->> 'name' AS skill_name,
             b.load_dt
-        FROM bronze.hh_vacancy_details_bronze b,
+        FROM bronze.hh_vacancies_details_bronze b,
              jsonb_array_elements(b.key_skills) AS skill
         WHERE b.load_dt = %s
         ON CONFLICT (vacancy_id, skill_name) DO NOTHING;
