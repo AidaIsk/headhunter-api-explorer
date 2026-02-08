@@ -147,7 +147,7 @@ def load_silver_vacancy_skills(load_dt: str):
             load_dt
         )
         SELECT
-            b.vacancy_id,
+            b.id as vacancy_id,
             skill ->> 'name' AS skill_name,
             b.load_dt
         FROM bronze.hh_vacancies_details_bronze b,
