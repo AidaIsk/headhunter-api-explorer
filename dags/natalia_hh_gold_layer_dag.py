@@ -39,7 +39,7 @@ with DAG(
     telegram_notify_task = PythonOperator(
         task_id="send_telegram_notification",
         python_callable=send_telegram_notification,
-        op_kwargs={"watched_tasks": ["load_to_pg_gold_vacancy_risk_signals"]},
+        op_kwargs={"watched_tasks": ["refresh_gold_vacancy_risk_signals"]},
         trigger_rule=TriggerRule.ALL_DONE,  
     )
 
