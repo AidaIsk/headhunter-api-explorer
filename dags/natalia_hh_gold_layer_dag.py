@@ -11,7 +11,7 @@ from utils.natalia_hh_postgres import init_postgres_tables, send_telegram_notifi
 with DAG(
     dag_id="natalia_hh_gold_layer",
     start_date=datetime(2025, 12, 25),
-    schedule="0 4 * * *",
+    schedule="0 5 * * *",
     catchup=False,
     max_active_runs=1,
 ) as dag:
