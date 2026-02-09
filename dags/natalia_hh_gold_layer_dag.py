@@ -20,14 +20,14 @@ with DAG(
     BASE_DIR = Path(__file__).resolve().parent
     SQL_DIR = BASE_DIR / "utils" / "sql"
 
-    init_postgres_tables_task = PythonOperator(
-            task_id="init_gold_vacancy_risk_signals",
-            python_callable=init_postgres_tables,
-            op_kwargs={
-                "postgres_conn_id": "postgres_bronze",
-                "ddl_path": str(SQL_DIR / "ddl_pg_gold_vacancy_risk_signals.sql")
-            }
-        )
+    # init_postgres_tables_task = PythonOperator(
+    #         task_id="init_gold_vacancy_risk_signals",
+    #         python_callable=init_postgres_tables,
+    #         op_kwargs={
+    #             "postgres_conn_id": "postgres_bronze",
+    #             "ddl_path": str(SQL_DIR / "ddl_pg_gold_vacancy_risk_signals.sql")
+    #         }
+    #     )
 
     refresh_gold_mv = PostgresOperator(
             task_id="refresh_gold_vacancy_risk_signals",
@@ -43,4 +43,5 @@ with DAG(
         trigger_rule=TriggerRule.ALL_DONE,  
     )
 
-    init_postgres_tables_task >> refresh_gold_mv >> telegram_notify_task
+    #init_postgres_tables_task  
+    refresh_gold_mv >> telegram_notify_task
