@@ -1,6 +1,6 @@
 CREATE SCHEMA IF NOT EXISTS gold;
 
-CREATE MATERIALIZED VIEW gold.vacancy_risk_signals AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS gold.vacancy_risk_signals AS
 
 WITH base AS (
 
