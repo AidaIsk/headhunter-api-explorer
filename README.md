@@ -74,6 +74,22 @@ BI / дашборды
 
 ---
 
+## Архитектура (схема потока данных)
+
+```mermaid
+flowchart LR
+    HH["HeadHunter API"]
+    AF["Airflow (DAG-и)"]
+    BZ["MinIO (Bronze, JSONL)"]
+    PG["PostgreSQL (Staging / Silver / Gold)"]
+    DBT["dbt (модели + тесты)"]
+    BI["BI / дашборды и очередь кейсов"]
+
+    HH --> AF --> BZ --> PG --> DBT --> BI
+```
+
+---
+
 ## Архитектурные принципы
 
 - Bronze слой — **source of truth**
@@ -217,6 +233,8 @@ ___
   - json_decode_error
 - Отдельный Bronze-датасет с ошибочными записями
 - Определение severity каждого прогона: OK, WARNING, CRITICAL
+- Telegram-алерты по статусу DAG и метрикам покрытия
+- Разделение технических ошибок (FAILED) и бизнес-инцидентов (CRITICAL coverage при SUCCESS)
 - Идемпотентная логика загрузки с безопасным повторным запуском
 
 ### Пример логов:
