@@ -5,6 +5,11 @@
 End-to-end Data Engineering пайплайн для сбора и подготовки данных о рынке вакансий  
 с акцентом на архитектуру, качество данных и compliance-ориентированные сценарии использования.
 
+## Контакты
+
+- Natalia Tarasova —  Data Engineer / Analytics Engineering — [GitHub](https://github.com/Dia-no-Ace) · [LinkedIn](https://www.linkedin.com/in/natalia-tarasova-39086b3a5)
+- Aida Iskakova — Data Engineering / Compliance & KYC Analyst | RegTech | Data-Driven Risk Operations — [GitHub](https://github.com/AidaIsk) · [LinkedIn](https://www.linkedin.com/in/aida-iskakova-5a0b002b3/)
+
 **Поток данных:**
 
 HeadHunter API → Airflow → MinIO (Bronze) → Postgres (Landing / Staging) → dbt (Staging → Silver → Gold) → BI
@@ -268,40 +273,37 @@ ___
 │   ├── aida_hh_daily_dag.py        # Daily DAG: сбор списка вакансий (IDs)
 │   ├── aida_hh_details_daily_dag.py# Daily DAG: enrichment вакансий (details)
 │   ├── natalia_hh_postgres_dag.py  # Загрузка Bronze → Postgres (Landing / Staging)
-│   ├── test_dag.py                 # Тестовый / экспериментальный DAG
-│   │
-│   ├── utils/
-│   │   ├── aida_hh_api.py          # Работа с HH API (requests, rate limits)
-│   │   ├── aida_hh_minio.py        # Клиенты и операции с MinIO
-│   │   ├── hh_ids.py               # Формирование manifest (vacancy IDs)
-│   │   ├── hh_details.py           # Enrichment + coverage / failure tracking
-│   │   ├── search_profiles.py      # Загрузка и обработка search_profiles.yaml
-│   │   └── natalia_hh_postgres.py  # Логика загрузки данных в Postgres
-│   │
-│   └── legacy/
-│       ├── aida_hh_init_dag.py      # Устаревшие DAG'и (сохранены для истории)
-│       └── minio_pandas_dag.py
+│   ├── natalia_hh_details_postgres_dag.py # Загрузка деталей в Postgres
+│   ├── natalia_hh_silver_layer_dag.py     # dbt-преобразования Silver
+│   ├── natalia_hh_gold_layer_dag.py       # Построение витрин Gold
+│   └── test_dag.py                 # Тестовый / экспериментальный DAG
 │
 ├── dbt/
-│   └── hh_compliance_dbt/
-│       ├── dbt_project.yml
-│       ├── packages.yml
-│       ├── models/
-│       │   ├── staging/
-│       │   │   └── hh/
-│       │   │       ├── stg_hh__vacancy_details.sql
-│       │   │       ├── stg_hh__employers.sql
-│       │   │       ├── stg_hh__vacancy_skills.sql
-│       │   │       └── stg_hh__vacancy_text.sql
-│       │   ├── silver/             # Бизнес-сущности (в разработке)
-│       │   └── gold/               # Аналитические витрины (в разработке)
-│       │
-│       └── tests/                  # dbt tests (schema / data tests)
+│   └── hh_compliance_dbt/          # dbt проект для трансформаций
+│       └── models/
+│           ├── staging/            # Техническая нормализация (contracts)
+│           ├── silver/             # Бизнес-сущности
+│           └── gold/               # Аналитические витрины
 │
-├── Dockerfile                      # Docker-образ Airflow
-├── docker-compose.yml              # Локальный запуск Airflow + MinIO + Postgres
-├── .env.example                    # Пример переменных окружения
-├── .gitignore
+├── docs/
+│   └── architecture/
+│       └── risk_signals_contract.md # Каноническая модель риск-сигналов (v1) 
+│
+├── utils/                          # Общие утилиты и логика
+│   ├── aida_hh_api.py              # Работа с HH API (requests, rate limits) 
+│   ├── aida_hh_minio.py            # Клиенты и операции с MinIO 
+│   ├── hh_ids.py                   # Формирование manifest (vacancy IDs) 
+│   ├── hh_details.py               # Enrichment + coverage / failure tracking 
+│   ├── search_profiles.py          # Загрузка и обработка search_profiles.yaml
+│   ├── natalia_hh_postgres.py      # Логика загрузки данных в Postgres 
+│   ├── hh_loader_s3.py             # Загрузчик данных в MinIO (Natalia) 
+│   ├── ddl_pg_bronze.sql           # Схема таблиц для вакансий (SQL) 
+│   └── ddl_pg_bronze_details.sql   # Схема таблиц для деталей (SQL) 
+│
+├── legacy/                         # Устаревшие файлы и архивы 
+├── Dockerfile                      # Образ Airflow
+├── docker-compose.yml              # Описание инфраструктуры
+├── .env.example                    # Шаблон переменных окружения
 └── README.md
 ```
 
