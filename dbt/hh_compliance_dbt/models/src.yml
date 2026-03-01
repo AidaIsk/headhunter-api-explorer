@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: bronze       # имя источника для вызова в моделях: {{ source('bronze', 'hh_vacancies_bronze') }}
+    database: mydb     # реальная база данных, где лежат таблицы
+    schema: bronze     # схема в этой базе
+    tables:
+      - name: hh_vacancies_bronze
+      - name: hh_vacancies_details_bronze

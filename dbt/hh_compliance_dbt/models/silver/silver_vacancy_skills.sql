@@ -1,0 +1,29 @@
+{{ config(
+    materialized='incremental',
+    unique_key=['vacancy_id', 'skill_name']
+) }}
+
+with new_data as (
+    select *
+    from {{ source('bronze', 'hh_vacancies_details_bronze') }}
+    {% if is_incremental() %}
+        where load_dt > (select max(load_dt) from {{ this }})
+    {% endif %}
+),
+
+combined as (
+    select
+        id as vacancy_id,
+        skill ->> 'name' as skill_name,
+        load_dt
+    from (
+        {% if is_incremental() %}
+            select * from {{ this }}   -- уже существующие данные в silver_test
+            union all
+        {% endif %}
+            select * from new_data      -- новые строки из bronze
+    ) t,
+    jsonb_array_elements(t.key_skills) as skill
+)
+
+select * from combined
