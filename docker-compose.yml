@@ -24,8 +24,8 @@ services:
 
   airflow-init:
     build:
-      context: .
-      dockerfile: airflow/Dockerfile
+      context: ./airflow
+      dockerfile: Dockerfile
     container_name: airflow_init
 
     entrypoint: ""
@@ -47,8 +47,8 @@ services:
 
   airflow-webserver:
     build:
-      context: .
-      dockerfile: airflow/Dockerfile
+      context: ./airflow
+      dockerfile: Dockerfile
     container_name: airflow_webserver
     
     restart: unless-stopped
@@ -104,8 +104,8 @@ services:
 
   airflow-scheduler:
     build:
-      context: .
-      dockerfile: airflow/Dockerfile
+      context: ./airflow
+      dockerfile: Dockerfile
     container_name: airflow_scheduler
     
     restart: unless-stopped
