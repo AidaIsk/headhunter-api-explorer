@@ -134,8 +134,6 @@ Bronze → Staging → Silver → Gold.
 
 ### Зоны ответственности
 
-### Зоны ответственности
-
 **Aida Iskakova — Architecture / Data Engineering / Compliance**
 
 - Архитектура ingestion: проектирование end-to-end потока данных и стратегии слоёв (Medallion Architecture).
