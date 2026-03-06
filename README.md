@@ -134,23 +134,21 @@ Bronze → Staging → Silver → Gold.
 
 ### Зоны ответственности
 
+### Зоны ответственности
+
 **Aida Iskakova — Architecture / Data Engineering / Compliance**
 
-• Архитектура ingestion и дизайн пайплайнов  
-• Manifest-based ingestion и контроль полноты данных (Expected vs Loaded)  
-• Логика observability: coverage, severity (OK / WARNING / CRITICAL)  
-• Формирование и поддержка контрактов входных данных для dbt (sources)  
-• Полная ответственность за staging-слой (техническая нормализация, без бизнес-логики)  
-• Обеспечение принципов immutability, idempotency и воспроизводимости пайплайнов  
+• Архитектура ingestion: проектирование end-to-end потока данных и стратегии слоёв (Medallion Architecture).
+• Data Quality & Observability: логика manifest-based ingestion (Expected vs Loaded), Coverage Reports и severity (OK / WARNING / CRITICAL).
+• Compliance Design (Logic Owner): постановка требований к данным, проектирование и формализация риск-сигналов и «серых зон».
+• Staging & Contracts: формирование технических контрактов входных данных и полная ответственность за staging-слой (техническая нормализация без бизнес-логики).
 
 **Natalia Tarasova — Analytics Engineering / Monitoring**
 
-• Проектирование аналитической модели данных (Silver-слой)  
-• Реализация бизнес-сущностей и связей между ними  
-• Разработка compliance- и risk-oriented логики (risk flags)  
-• Построение Gold-слоя и аналитических витрин  
-• Настройка алертинга и мониторинга качества данных  
-• Контроль стабильности и корректности downstream-слоёв  
+• DWH Implementation: загрузка данных из MinIO в Postgres и физическое моделирование слоёв данных.
+• dbt Development: реализация риск-флагов и трансформаций в слоях Silver и Gold на основе ТЗ в dbt.
+• Business Intelligence: построение аналитических витрин и дашбордов для мониторинга рынка вакансий и качества данных.
+• Operations & Monitoring: настройка системы алертинга и операционного мониторинга стабильности пайплайнов.
 
 ---
 
