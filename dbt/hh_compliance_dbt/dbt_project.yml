@@ -31,6 +31,14 @@ clean-targets:         # directories to be removed by `dbt clean`
 # files using the `{{ config(...) }}` macro.
 models:
   hh_compliance_dbt:
-    # Config indicated by + and applies to all files under models/example/
-    example:
+    # Слой Staging (зона Аиды): техническая нормализация без бизнес-логики
+    staging:
       +materialized: view
+    
+    # Слой Silver (зона Натальи): дедуплицированные бизнес-сущности
+    silver:
+      +materialized: table
+    
+    # Слой Gold (зона Натальи): риск-сигналы и витрины для аналитика
+    gold:
+      +materialized: table
