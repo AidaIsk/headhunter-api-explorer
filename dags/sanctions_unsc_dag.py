@@ -5,7 +5,7 @@ from datetime import datetime
 from utils.sanctions_utils import ingest_unsc
 
 default_args = {
-    "owner": "risk-team",
+    "owner": "aida",
     "start_date": datetime(2024,1,1),
     "retries": 1
 }
