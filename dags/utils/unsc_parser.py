@@ -20,7 +20,8 @@ def parse_unsc_xml(xml_path):
         records.append({
             "name": name.lower(),
             "type": "individual",
-            "source": "UNSC"
+            "source": "UNSC",
+            "is_alias": False
         })
 
     for alias in root.findall(".//INDIVIDUAL_ALIAS"):
@@ -31,9 +32,9 @@ def parse_unsc_xml(xml_path):
             records.append({
                 "name": alias_name.lower(),
                 "type": "individual",
-                "source": "UNSC"
+                "source": "UNSC",
+                "is_alias": True
             })
-            
     # ENTITY
     for entity in root.findall(".//ENTITY"):
 
