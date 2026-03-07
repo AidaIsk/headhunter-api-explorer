@@ -95,3 +95,6 @@ def load_unsc_to_bronze(ds, **context):
     )
 
     conn.commit()
+
+    cur.close()
+    conn.close()
