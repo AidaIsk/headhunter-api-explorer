@@ -4,6 +4,7 @@ import json
 import requests
 from datetime import datetime
 from pathlib import Path
+import boto3
 
 # Официальный URL консолидированного списка ООН
 UNSC_XML_URL = "https://scsanctions.un.org/resources/xml/en/consolidated.xml"
