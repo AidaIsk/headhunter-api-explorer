@@ -15,13 +15,25 @@ def parse_unsc_xml(xml_path):
         second = person.findtext("SECOND_NAME")
 
         name = " ".join(filter(None,[first,second]))
-
+        
+        # основное имя
         records.append({
             "name": name.lower(),
             "type": "individual",
             "source": "UNSC"
         })
 
+    for alias in root.findall(".//INDIVIDUAL_ALIAS"):
+
+        alias_name = alias.findtext("ALIAS_NAME")
+
+        if alias_name:
+            records.append({
+                "name": alias_name.lower(),
+                "type": "individual",
+                "source": "UNSC"
+            })
+            
     # ENTITY
     for entity in root.findall(".//ENTITY"):
 
