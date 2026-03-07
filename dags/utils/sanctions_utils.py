@@ -5,6 +5,7 @@ import requests
 from datetime import datetime
 from pathlib import Path
 import boto3
+import psycopg2
 
 # Официальный URL консолидированного списка ООН
 UNSC_XML_URL = "https://scsanctions.un.org/resources/xml/en/consolidated.xml"
@@ -66,3 +67,31 @@ def ingest_unsc(ds, **context):
     s3_client.upload_file(local_meta_path, minio_bucket, meta_key)
     
     print(f"✅ Успешно загружен список UNSC за {ds}. Hash: {file_hash}")
+
+def load_unsc_to_bronze(ds, **context):
+
+    bucket = os.getenv("MINIO_BUCKET")
+    s3 = get_s3_client()
+
+    key = f"bronze/sanctions/source=UNSC/list=CONSOLIDATED/dt={ds}/consolidated.xml"
+
+    local_path = f"/tmp/unsc_{ds}.xml"
+
+    s3.download_file(bucket, key, local_path)
+
+    with open(local_path, "r") as f:
+        xml_data = f.read()
+
+    conn = psycopg2.connect(os.getenv("POSTGRES_URI"))
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        INSERT INTO bronze.unsc_raw
+        (source, ingestion_date, raw_xml)
+        VALUES (%s,%s,%s)
+        """,
+        ("UNSC", ds, xml_data)
+    )
+
+    conn.commit()
