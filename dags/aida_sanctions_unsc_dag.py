@@ -21,3 +21,10 @@ with DAG(
         task_id="ingest_unsc_xml",
         python_callable=ingest_unsc
     )
+
+    load_task = PythonOperator(
+        task_id="load_unsc_to_postgres_bronze",
+        python_callable=load_unsc_to_bronze
+    )
+
+    ingest_task >> load_task
