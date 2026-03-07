@@ -18,6 +18,6 @@ with DAG(
 ) as dag:
 
     ingest_task = PythonOperator(
-        task_id="download_unsc_list",
+        task_id="ingest_unsc_xml",
         python_callable=ingest_unsc
     )
