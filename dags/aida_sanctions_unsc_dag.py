@@ -3,6 +3,7 @@ from airflow.operators.python import PythonOperator
 from datetime import datetime
 
 from utils.sanctions_utils import ingest_unsc
+from utils.sanctions_utils import load_unsc_to_bronze
 
 default_args = {
     "owner": "aida",
