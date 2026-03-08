@@ -32,9 +32,6 @@ with DAG(
     register_task = PythonOperator(
         task_id="register_unsc_raw",
         python_callable=register_unsc_raw,
-        op_kwargs={
-            "bucket": "sanctions"
-        }
     )
 
     download_task >> upload_task >> register_task
