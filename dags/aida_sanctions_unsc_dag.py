@@ -2,8 +2,9 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
 
-from utils.sanctions_utils import ingest_unsc
-from utils.sanctions_utils import load_unsc_to_bronze
+from utils.sanctions_utils import download_unsc
+from utils.sanctions_utils import upload_unsc_to_minio
+from utils.sanctions_utils import register_unsc_raw
 
 default_args = {
     "owner": "aida",
