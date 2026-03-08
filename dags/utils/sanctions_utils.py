@@ -5,7 +5,7 @@ import requests
 from datetime import datetime
 from pathlib import Path
 import boto3
-import psycopg2
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 # Официальный URL консолидированного списка ООН
 UNSC_XML_URL = "https://scsanctions.un.org/resources/xml/en/consolidated.xml"
@@ -68,33 +68,58 @@ def ingest_unsc(ds, **context):
     
     print(f"✅ Успешно загружен список UNSC за {ds}. Hash: {file_hash}")
 
-def load_unsc_to_bronze(ds, **context):
+def load_unsc_metadata(bucket, prefix, **context):
 
-    bucket = os.getenv("MINIO_BUCKET")
-    s3 = get_s3_client()
+    s3_client = get_s3_client()
 
-    key = f"bronze/sanctions/source=UNSC/list=CONSOLIDATED/dt={ds}/consolidated.xml"
+    hook = PostgresHook(postgres_conn_id="postgres_bronze")
+    paginator = s3_client.get_paginator("list_objects_v2")
 
-    local_path = f"/tmp/unsc_{ds}.xml"
+    with hook.get_conn() as conn:
+        with conn.cursor() as cur:
 
-    s3.download_file(bucket, key, local_path)
+            for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
 
-    with open(local_path, "r") as f:
-        xml_data = f.read()
+                for obj in page.get("Contents", []):
 
-    conn = psycopg2.connect(os.getenv("POSTGRES_URI"))
-    cur = conn.cursor()
+                    key = obj["Key"]
 
-    cur.execute(
-        """
-        INSERT INTO bronze.unsc_raw
-        (source, ingestion_date, raw_xml)
-        VALUES (%s,%s,%s)
-        """,
-        ("UNSC", ds, xml_data)
-    )
+                    if not key.endswith("metadata.json"):
+                        continue
 
-    conn.commit()
+                    file_obj = s3_client.get_object(
+                        Bucket=bucket,
+                        Key=key
+                    )
 
-    cur.close()
-    conn.close()
+                    metadata = json.loads(
+                        file_obj["Body"].read().decode("utf-8")
+                    )
+
+                    load_dt = datetime.utcnow()
+
+                    cur.execute(
+                        """
+                        INSERT INTO bronze.sanctions_raw (
+                            source,
+                            load_dt,
+                            object_key,
+                            payload,
+                            metadata,
+                            sha256
+                        )
+                        VALUES (%s,%s,%s,%s,%s,%s)
+                        ON CONFLICT (sha256) DO NOTHING;
+                        """,
+                        (
+                            "UNSC",
+                            load_dt,
+                            key,
+                            None,
+                            json.dumps(metadata),
+                            metadata["sha256"]
+                        )
+                    )
+
+        conn.commit()
+
