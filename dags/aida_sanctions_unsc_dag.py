@@ -12,20 +12,28 @@ default_args = {
 }
 
 with DAG(
-    dag_id="ingest_unsc_sanctions",
+    dag_id="aida_ingest_unsc_sanctions",
     schedule_interval="0 21 * * 0",
     catchup=False,
     default_args=default_args
 ) as dag:
 
-    ingest_task = PythonOperator(
-        task_id="ingest_unsc_xml",
-        python_callable=ingest_unsc
+    download_task = PythonOperator(
+        task_id="download_unsc",
+        python_callable=download_unsc
     )
 
-    load_task = PythonOperator(
-        task_id="load_unsc_to_postgres_bronze",
-        python_callable=load_unsc_to_bronze
+    upload_task = PythonOperator(
+        task_id="upload_unsc_to_minio",
+        python_callable=upload_unsc_to_minio
     )
 
-    ingest_task >> load_task
+    register_task = PythonOperator(
+        task_id="register_unsc_raw",
+        python_callable=register_unsc_raw,
+        op_kwargs={
+            "bucket": "sanctions"
+        }
+    )
+
+    download_task >> upload_task >> register_task
