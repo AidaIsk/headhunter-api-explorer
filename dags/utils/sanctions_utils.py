@@ -86,7 +86,7 @@ def register_unsc_raw(ti, **context):
     s3_client = get_s3_client()
 
     xml_obj = s3_client.get_object(
-        Bucket=bucket,
+        Bucket=data["bucket"],
         Key=xml_key
     )
 
