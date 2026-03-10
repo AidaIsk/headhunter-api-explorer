@@ -71,6 +71,7 @@ def upload_unsc_to_minio(ds, ti, **context):
     s3_client.upload_file(local_meta, minio_bucket, meta_key)
 
     return {
+        "bucket": minio_bucket,
         "xml_key": xml_key,
         "metadata": metadata
     }
@@ -83,7 +84,6 @@ def register_unsc_raw(ti, **context):
     metadata = data["metadata"]
 
     s3_client = get_s3_client()
-    bucket = os.getenv("MINIO_BUCKET")
 
     xml_obj = s3_client.get_object(
         Bucket=bucket,
