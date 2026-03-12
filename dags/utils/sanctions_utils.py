@@ -127,7 +127,7 @@ def get_latest_unsc_xml():
     postgres = PostgresHook(postgres_conn_id="postgres_bronze")
 
     sql = """
-    SELECT xml_content
+    SELECT payload
     FROM bronze.sanctions_raw
     ORDER BY created_at DESC
     LIMIT 1
