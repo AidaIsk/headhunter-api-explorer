@@ -7,6 +7,13 @@ def safe_text(value):
         return value.strip()
     return None
 
+def normalize_date(date_str):
+
+    if not date_str:
+        return None
+
+    # пример: 2015-04-07-04:00
+    return date_str[:10]
 
 def parse_unsc_xml(xml_string):
 
@@ -34,7 +41,7 @@ def parse_unsc_xml(xml_string):
         name = " ".join([p.strip() for p in parts if p])
 
         reference_number = safe_text(person.findtext("REFERENCE_NUMBER"))
-        listed_on = safe_text(person.findtext("LISTED_ON"))
+        listed_on = safe_text(normalize_date(element.findtext("LISTED_ON")))
         gender = safe_text(person.findtext("GENDER"))
         comments = safe_text(person.findtext("COMMENTS1"))
 
@@ -97,7 +104,7 @@ def parse_unsc_xml(xml_string):
         name = safe_text(entity.findtext("FIRST_NAME"))
 
         reference_number = safe_text(entity.findtext("REFERENCE_NUMBER"))
-        listed_on = safe_text(entity.findtext("LISTED_ON"))
+        listed_on = safe_text(normalize_date(element.findtext("LISTED_ON")))
         comments = safe_text(entity.findtext("COMMENTS1"))
 
         entities.append({
