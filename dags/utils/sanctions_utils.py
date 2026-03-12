@@ -121,3 +121,29 @@ def register_unsc_raw(ti, **context):
             )
 
         conn.commit()
+
+def get_latest_unsc_xml():
+
+    postgres = PostgresHook(postgres_conn_id="postgres_bronze")
+
+    sql = """
+    SELECT xml_content
+    FROM bronze.unsc_sanctions_raw
+    ORDER BY created_at DESC
+    LIMIT 1
+    """
+
+    conn = postgres.get_conn()
+    cursor = conn.cursor()
+
+    cursor.execute(sql)
+
+    result = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if result:
+        return result[0]
+
+    raise ValueError("No UN sanctions XML found in bronze layer")
