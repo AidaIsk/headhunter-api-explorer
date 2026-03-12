@@ -128,7 +128,7 @@ def get_latest_unsc_xml():
 
     sql = """
     SELECT xml_content
-    FROM bronze.unsc_sanctions_raw
+    FROM bronze.sanctions_raw
     ORDER BY created_at DESC
     LIMIT 1
     """
