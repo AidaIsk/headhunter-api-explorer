@@ -129,7 +129,7 @@ def get_latest_unsc_xml():
     sql = """
     SELECT payload
     FROM bronze.sanctions_raw
-    ORDER BY created_at DESC
+    ORDER BY inserted_at DESC
     LIMIT 1
     """
 
