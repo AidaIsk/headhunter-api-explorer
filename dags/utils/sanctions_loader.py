@@ -55,7 +55,8 @@ def load_unsc_to_staging(parsed_data):
     )
     VALUES %s
     """
-
+    cursor.execute("TRUNCATE TABLE dbt_staging.stg_unsc__entities")
+    
     execute_values(cursor, sql_entities, entities_rows)
 
     # ------------------------
