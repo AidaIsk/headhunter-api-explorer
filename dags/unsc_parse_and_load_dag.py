@@ -4,7 +4,7 @@ from datetime import datetime
 
 from utils.sanctions_utils import get_latest_unsc_xml
 from utils.unsc_parser import parse_unsc_xml
-from utils.sanctions_loader import load_unsc_to_silver
+from utils.sanctions_loader import load_unsc_to_staging
 
 
 default_args = {
@@ -23,7 +23,7 @@ def parse_and_load():
     parsed = parse_unsc_xml(xml_string)
 
     # 3 загрузка
-    load_unsc_to_silver(parsed)
+    load_unsc_to_staging(parsed)
 
 
 with DAG(
