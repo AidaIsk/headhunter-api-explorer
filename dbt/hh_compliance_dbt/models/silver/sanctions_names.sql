@@ -43,5 +43,18 @@ select
     name_type,
     source_list,
     load_timestamp,
-    lower(trim(name_value)) as normalized_name
+
+    trim(
+        regexp_replace(
+            regexp_replace(
+                regexp_replace(
+                    lower(name_value),
+                    '[-/]+', ' ', 'g'
+                ),
+                '[^[:alnum:][:space:]]+', '', 'g'
+            ),
+            '\s+', ' ', 'g'
+        )
+    ) as normalized_name
+
 from unioned
