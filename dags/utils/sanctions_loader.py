@@ -63,32 +63,32 @@ def load_unsc_to_staging(parsed_data):
     # ALIASES
     # ------------------------
 
-    # aliases_rows = []
+    aliases_rows = []
 
-    # for a in parsed_data["aliases"]:
+    for a in parsed_data["aliases"]:
 
-    #     aliases_rows.append((
-    #         a["entity_id"],
-    #         a["alias"],
-    #         now,
-    #         None,
-    #         True
-    #     ))
+        aliases_rows.append((
+            a["entity_id"],
+            a["alias"],
+            "UN_SC_1267",
+            now,
+        ))
 
-    # sql_aliases = """
-    # INSERT INTO silver.sanctions_aliases
-    # (
-    #     dataid,
-    #     alias,
-    #     valid_from,
-    #     valid_to,
-    #     is_current
-    # )
-    # VALUES %s
-    # """
+    sql_aliases = """
+    INSERT INTO dbt_staging.stg_unsc__aliases 
+    (
+        entity_id,
+        alias_name,
+        source_list,
+        load_timestamp
+    )
+    VALUES %s
+    """
 
-    # if aliases_rows:
-    #     execute_values(cursor, sql_aliases, aliases_rows)
+    cursor.execute("TRUNCATE TABLE dbt_staging.stg_unsc__aliases")
+
+    if aliases_rows:
+        execute_values(cursor, sql_aliases, aliases_rows)
 
     # # ------------------------
     # # NATIONALITIES
@@ -154,7 +154,8 @@ def load_unsc_to_staging(parsed_data):
     # if doc_rows:
     #     execute_values(cursor, sql_docs, doc_rows)
 
-    conn.commit()
+    jls_extract_var = conn
+    jls_extract_var.commit()
 
     cursor.close()
     conn.close()
