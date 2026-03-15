@@ -94,65 +94,65 @@ def load_unsc_to_staging(parsed_data):
     # # NATIONALITIES
     # # ------------------------
 
-    # nat_rows = []
+    nat_rows = []
 
-    # for n in parsed_data["nationalities"]:
+    for n in parsed_data["nationalities"]:
 
-    #     nat_rows.append((
-    #         n["entity_id"],
-    #         n["nationality"],
-    #         now,
-    #         None,
-    #         True
-    #     ))
+        nat_rows.append((
+            n["entity_id"],
+            n["nationality"],
+            "UN_SC_1267",
+            now,
+        ))
 
-    # sql_nat = """
-    # INSERT INTO silver.sanctions_nationalities
-    # (
-    #     dataid,
-    #     nationality,
-    #     valid_from,
-    #     valid_to,
-    #     is_current
-    # )
-    # VALUES %s
-    # """
+    sql_nat = """
+    INSERT INTO dbt_staging.stg_unsc__nationalities 
+    (
+        entity_id,
+        nationality,
+        source_list,
+        load_timestamp
+    )
+    VALUES %s
+    """
 
-    # if nat_rows:
-    #     execute_values(cursor, sql_nat, nat_rows)
+    cursor.execute("TRUNCATE TABLE dbt_staging.stg_unsc__nationalities")
+
+    if nat_rows:
+        execute_values(cursor, sql_nat, nat_rows)
 
     # # ------------------------
     # # DOCUMENTS
     # # ------------------------
 
-    # doc_rows = []
+    doc_rows = []
 
-    # for d in parsed_data["documents"]:
+    for d in parsed_data["documents"]:
 
-    #     doc_rows.append((
-    #         d["entity_id"],
-    #         d["doc_type"],
-    #         d["doc_number"],
-    #         now,
-    #         None,
-    #         True
-    #     ))
+        doc_rows.append((
+            d["entity_id"],
+            d["doc_type"],
+            d["doc_number"],
+            "UN_SC_1267",
+            now
+        ))
 
-    # sql_docs = """
-    # INSERT INTO silver.sanctions_documents
-    # (
-    #     dataid,
-    #     doc_type,
-    #     doc_number,
-    #     valid_from,
-    #     valid_to,
-    #     is_current
-    # )
-    # VALUES %s
-    # """
+    sql_docs = """
+    INSERT INTO dbt_staging.stg_unsc__documents 
+    (
+        entity_id,
+        doc_type,
+        doc_number,
+        source_list,
+        load_timestamp
+    )
+    VALUES %s
+    """
 
-    # if doc_rows:
-    #     execute_values(cursor, sql_docs, doc_rows)
+    cursor.execute("TRUNCATE TABLE dbt_staging.stg_unsc__documents")
+
+    if doc_rows:
+        execute_values(cursor, sql_docs, doc_rows)
 
     jls_extract_var = conn
     jls_extract_var.commit()
