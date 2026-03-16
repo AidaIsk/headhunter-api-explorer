@@ -45,6 +45,7 @@ scored as (
         i.normalized_input_name,
         s.entity_id,
         s.name_value as matched_name,
+        s.normalized_name as matched_normalized_name,
         s.name_type,
         s.source_list,
         dbt_staging_gold.similarity(
@@ -61,6 +62,7 @@ matched as (
     select *
     from scored
     where similarity_score > 0.7
+       or normalized_input_name = matched_normalized_name
 
 ),
 
@@ -70,7 +72,13 @@ deduped as (
         *,
         row_number() over (
             partition by input_name, matched_name
-            order by similarity_score desc, entity_id
+            order by
+                case
+                    when normalized_input_name = matched_normalized_name then 1
+                    else 0
+                end desc,
+                similarity_score desc,
+                entity_id
         ) as dedup_rn
     from matched
 
@@ -83,6 +91,7 @@ best_per_name as (
         normalized_input_name,
         entity_id,
         matched_name,
+        matched_normalized_name,
         name_type,
         source_list,
         similarity_score
@@ -97,7 +106,13 @@ ranked as (
         *,
         row_number() over (
             partition by input_name
-            order by similarity_score desc, matched_name
+            order by
+                case
+                    when normalized_input_name = matched_normalized_name then 1
+                    else 0
+                end desc,
+                similarity_score desc,
+                matched_name
         ) as rn
     from best_per_name
 
@@ -108,11 +123,12 @@ select
     normalized_input_name,
     entity_id,
     matched_name,
+    matched_normalized_name,
     name_type,
     source_list,
     similarity_score,
     case
-        when similarity_score >= 0.95 then 'MATCH'
+        when normalized_input_name = matched_normalized_name then 'MATCH'
         when similarity_score >= 0.70 then 'POSSIBLE_MATCH'
         else 'NO_MATCH'
     end as screening_result,
