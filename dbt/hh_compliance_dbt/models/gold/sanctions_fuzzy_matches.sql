@@ -47,10 +47,10 @@ matched as (
         s.name_value as matched_name,
         s.name_type,
         s.source_list,
-        similarity(i.normalized_input_name, s.normalized_name) as similarity_score
+        dbt_staging_gold.similarity(i.normalized_input_name, s.normalized_name) as similarity_score
     from inputs i
     join sanctions s
-      on similarity(i.normalized_input_name, s.normalized_name) > 0.7
+      on dbt_staging_gold.(i.normalized_input_name, s.normalized_name) > 0.7
 
 ),
 
