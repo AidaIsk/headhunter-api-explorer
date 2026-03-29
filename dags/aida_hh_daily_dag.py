@@ -51,6 +51,14 @@ with DAG(
         reset_dag_run=True,
         wait_for_completion=False,
     )
+
+    trigger_postgres_dag = TriggerDagRunOperator(
+        task_id="trigger_natalia_hh_postgres_dag",
+        trigger_dag_id="nataliia_hh_to_postgres", 
+        reset_dag_run=True,
+        wait_for_completion=True
+    )
+
     telegram_notify_task = PythonOperator(
         task_id='send_telegram_notification',
         python_callable=pg_utils.send_telegram_notification,
@@ -58,4 +66,4 @@ with DAG(
         trigger_rule=TriggerRule.ALL_DONE
     )
 
-    collect_bronze_json >> build_vacancies_ids >> trigger_details_dag >> telegram_notify_task
+    collect_bronze_json >> build_vacancies_ids >> [trigger_details_dag, trigger_postgres_dag] >> telegram_notify_task

@@ -18,8 +18,8 @@ with DAG(
     dag_id='nataliia_hh_to_postgres',
     default_args=default_args,
     start_date=datetime(2025, 12, 25),
-    schedule_interval='0 2 * * *',
-    catchup=True,
+    schedule_interval=None,
+    catchup=False,
     max_active_runs=1,
 ) as dag:
     

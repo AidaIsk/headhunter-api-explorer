@@ -3,6 +3,7 @@ from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.utils.trigger_rule import TriggerRule
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
 from utils.hh_details import build_details_coverage_report
 from utils.hh_details import collect_vacancy_details
@@ -49,6 +50,14 @@ with DAG(
             "load_type": "daily"
         },
     )
+
+    trigger_postgres_details_dag = TriggerDagRunOperator(
+        task_id="trigger_natalia_hh_postgres_details_dag",
+        trigger_dag_id="nataliia_hh_details_to_postgres", 
+        reset_dag_run=True,
+        wait_for_completion=True
+    )
+
     telegram_notify_task = PythonOperator(
         task_id='send_telegram_notification',
         python_callable=pg_utils.send_telegram_notification,
@@ -58,4 +67,4 @@ with DAG(
     
 
 guard_has_ids_task >> collect_vacancy_details_task
-collect_vacancy_details_task >> build_details_coverage_report_task >> telegram_notify_task
+collect_vacancy_details_task >> build_details_coverage_report_task >> trigger_postgres_details_dag >> telegram_notify_task

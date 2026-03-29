@@ -2,6 +2,7 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.models import Variable
 from airflow.utils.trigger_rule import TriggerRule
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
 from datetime import datetime
 from pathlib import Path
@@ -18,8 +19,8 @@ with DAG(
     dag_id='nataliia_hh_details_to_postgres',
     default_args=default_args,
     start_date=datetime(2026, 1, 4),
-    schedule_interval='0 3 * * *',
-    catchup=True,
+    schedule_interval=None,
+    catchup=False,
     max_active_runs=1,
 ) as dag:
 
@@ -66,6 +67,13 @@ with DAG(
         }
     )
 
+    trigger_postgres_silver_dag = TriggerDagRunOperator(
+        task_id="trigger_natalia_hh_silver_layer_dag",
+        trigger_dag_id="natalia_hh_silver_layer", 
+        reset_dag_run=True,
+        wait_for_completion=True
+    )
+
     telegram_notify_task = PythonOperator(
         task_id="send_telegram_notification",
         python_callable=pg_utils.send_telegram_notification,
@@ -73,4 +81,5 @@ with DAG(
         trigger_rule=TriggerRule.ALL_DONE,  
     )
 
-    init_postgres_tables_task >> check_new_files_task >> load_to_postgres_task >> load_to_postgres_report_task>> telegram_notify_task
+    init_postgres_tables_task >> check_new_files_task >> load_to_postgres_task >> load_to_postgres_report_task 
+    load_to_postgres_report_task >> trigger_postgres_silver_dag >> telegram_notify_task
