@@ -1,6 +1,8 @@
 {{ config(
     materialized='incremental',
-    unique_key='vacancy_id'
+    unique_key='vacancy_id',
+    alias='vacancies',
+    schema='silver_test'
 ) }}
 
 with bronze as (
