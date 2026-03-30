@@ -60,11 +60,12 @@ def build_vacancies_ids_manifest(ds, load_type, **context):
 
     return f"s3://{minio_bucket}/{object_key}"
 
-def guard_has_ids(load_type, **context):
-    dag_conf = context["dag_run"].conf or {}
-    ds = dag_conf.get("ds")
+def guard_has_ids(ds: str, load_type: str, **context) -> None:
+    # ds приходит из op_kwargs — аналогично collect_vacancy_details.
+    # Исключение: когда details-DAG триггерится вручную через UI без conf,
+    # ds будет пустым — это правильное поведение, ValueError поймает такой случай явно.
     if not ds:
-        raise ValueError("ds not provided via dag_run.conf")
+        raise ValueError("ds is empty — проверь op_kwargs в DAG-файле")
 
     minio_bucket = os.getenv("MINIO_BUCKET")
 
@@ -76,13 +77,8 @@ def guard_has_ids(load_type, **context):
     s3_client = get_s3_client()
 
     try:
-        s3_client.head_object(
-            Bucket=minio_bucket,
-            Key=manifest_key
-        )
-        logging.info(
-            f"Manifest found: s3://{minio_bucket}/{manifest_key}"
-        )
+        s3_client.head_object(Bucket=minio_bucket, Key=manifest_key)
+        logging.info(f"Manifest found: s3://{minio_bucket}/{manifest_key}")
 
     except ClientError as e:
         error_code = e.response.get("Error", {}).get("Code")
@@ -92,11 +88,7 @@ def guard_has_ids(load_type, **context):
                 f"Manifest NOT found for ds={ds}, load_type={load_type}. "
                 "Skipping enrichment DAG."
             )
-            raise AirflowSkipException(
-                f"No vacancies_ids manifest for ds={ds}"
-            )
+            raise AirflowSkipException(f"No vacancies_ids manifest for ds={ds}")
 
-        logging.error(
-            f"Error while checking manifest existence: {e}"
-        )
+        logging.error(f"Error while checking manifest existence: {e}")
         raise

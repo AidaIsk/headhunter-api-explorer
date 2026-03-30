@@ -30,6 +30,7 @@ with DAG(
         task_id="guard_has_ids",
         python_callable=guard_has_ids,
         op_kwargs={
+            "ds": "{{ ds }}",        # добавлено: Airflow разворачивает дату до вызова функции
             "load_type": "daily",
         },
     )

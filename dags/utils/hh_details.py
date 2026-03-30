@@ -463,12 +463,12 @@ def build_details_coverage_report(ds: str, load_type: str, **context) -> str:
 
     return s3_path
 
-
-def collect_vacancy_details(load_type: str, batch_size = DETAILS_BATCH_SIZE, **context) -> None:
-    dag_conf = context["dag_run"].conf or {}
-    ds = dag_conf.get("ds")
+def collect_vacancy_details(ds: str, load_type: str, batch_size=DETAILS_BATCH_SIZE, **context) -> None:
+    # ds приходит напрямую из op_kwargs — Airflow разворачивает "{{ ds }}" ещё до вызова функции.
+    # Лезть в dag_run.conf не нужно: при автотриггере через TriggerDagRunOperator
+    # conf содержит ds родительского DAG, но op_kwargs уже правильно проставлен планировщиком.
     if not ds:
-        raise ValueError("ds not provided via dag_run.conf")
+        raise ValueError("ds is empty — проверь op_kwargs в DAG-файле")
 
     expected_rows = load_vacancy_ids(ds, load_type)
     batches = split_into_batches(expected_rows, batch_size=batch_size)
