@@ -39,7 +39,16 @@ SELECT
     END AS risk_signal_vague_job_description,
 
     CASE
-        WHEN v.expected_risk_category IN ('crypto','gambling','payments')
+        -- Все пять риск-профилей из search_profiles.yaml должны попасть сюда.
+        -- grey_schemes и scam были пропущены — вакансии-приманки и дропы
+        -- уходили в OK, минуя комплаенс-очередь полностью.
+        WHEN v.expected_risk_category IN (
+            'crypto',
+            'gambling',
+            'payments',
+            'grey_schemes',  -- дропы, номиналы, занятость без договора
+            'scam'           -- вакансии-приманки P5_scam_baits
+        )
         THEN 1 ELSE 0
     END AS risk_signal_risk_domain_profile,
 
