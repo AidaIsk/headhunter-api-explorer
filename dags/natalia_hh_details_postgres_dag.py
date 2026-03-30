@@ -71,7 +71,7 @@ with DAG(
         task_id="trigger_natalia_hh_silver_layer_dag",
         trigger_dag_id="natalia_hh_silver_layer", 
         reset_dag_run=True,
-        wait_for_completion=True
+        wait_for_completion=False
     )
 
     telegram_notify_task = PythonOperator(
