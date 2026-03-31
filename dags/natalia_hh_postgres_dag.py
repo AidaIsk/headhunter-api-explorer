@@ -2,6 +2,7 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.models import Variable
 from airflow.utils.trigger_rule import TriggerRule
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
 from datetime import datetime
 from pathlib import Path
