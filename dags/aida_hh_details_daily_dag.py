@@ -71,4 +71,4 @@ with DAG(
     
 
 guard_has_ids_task >> collect_vacancy_details_task
-collect_vacancy_details_task >> build_details_coverage_report_task >> trigger_postgres_dag >> telegram_notify_task
+collect_vacancy_details_task >> build_details_coverage_report_task >> trigger_postgres_details_dag >> telegram_notify_task
