@@ -312,25 +312,22 @@ def _list_all_keys(bucket: str, prefix: str) -> List[str]:
 
 
 def build_details_coverage_report(ds: str, load_type: str, **context) -> str:
-    """
-    Coverage task:
-    - NEVER fails DAG
-    - Observes data availability and completeness
-    """
-
     ti = context["ti"]
     dag_run = context.get("dag_run")
 
-    # --- 1. Определяем бизнес-дату (важно!)
-    coverage_ds = ds
-    if dag_run and dag_run.conf and dag_run.conf.get("ds"):
-        coverage_ds = dag_run.conf["ds"]
-        logging.info(f"[coverage] using ds from dag_run.conf: {coverage_ds}")
-    else:
-        logging.warning(f"[coverage] dag_run.conf.ds not found, fallback to ds={ds}")
+    # --- 1. Определяем бизнес-дату
+    # Приоритет: XCom от guard_has_ids → conf["ds"] → ds из Airflow.
+    # XCom — самый надёжный источник: guard уже разрешил дату единожды для всего рана.
+    coverage_ds = ti.xcom_pull(task_ids="guard_has_ids", key="resolved_ds")
 
-    minio_bucket = os.getenv("MINIO_BUCKET")
-    s3_client = get_s3_client()
+    if not coverage_ds:
+        # Fallback на случай, если guard был пропущен или XCom пустой
+        if dag_run and dag_run.conf and dag_run.conf.get("ds"):
+            coverage_ds = dag_run.conf["ds"]
+            logging.info(f"[coverage] using ds from dag_run.conf: {coverage_ds}")
+        else:
+            coverage_ds = ds
+            logging.info(f"[coverage] using ds from Airflow context: {coverage_ds}")
 
     # --- 2. Загружаем manifest (expected)
     coverage_reason = "OK"
@@ -463,12 +460,15 @@ def build_details_coverage_report(ds: str, load_type: str, **context) -> str:
 
     return s3_path
 
-def collect_vacancy_details(ds: str, load_type: str, batch_size=DETAILS_BATCH_SIZE, **context) -> None:
-    # ds приходит напрямую из op_kwargs — Airflow разворачивает "{{ ds }}" ещё до вызова функции.
-    # Лезть в dag_run.conf не нужно: при автотриггере через TriggerDagRunOperator
-    # conf содержит ds родительского DAG, но op_kwargs уже правильно проставлен планировщиком.
+def collect_vacancy_details(load_type: str, batch_size=DETAILS_BATCH_SIZE, **context) -> None:
+    # Берём дату из XCom от guard_has_ids: там уже применён приоритет conf > ds.
+    # Это гарантирует, что collect работает ровно с той же датой, что и guard.
+    ds = context["ti"].xcom_pull(task_ids="guard_has_ids", key="resolved_ds")
+
     if not ds:
-        raise ValueError("ds is empty — проверь op_kwargs в DAG-файле")
+        raise ValueError(
+            "resolved_ds not found in XCom — guard_has_ids должен выполниться первым"
+        )
 
     expected_rows = load_vacancy_ids(ds, load_type)
     batches = split_into_batches(expected_rows, batch_size=batch_size)

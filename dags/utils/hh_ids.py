@@ -8,6 +8,25 @@ from botocore.exceptions import ClientError
 
 import logging
 
+def _resolve_ds(context: dict) -> str:
+    """
+    Приоритет даты:
+    1. dag_run.conf["ds"] — если DAG запущен вручную с явной датой
+    2. ds из контекста Airflow — при автоматическом запуске
+
+    Это позволяет делать manual rerun за нужную дату без смены кода:
+    запускаешь DAG через UI с conf {"ds": "2026-03-30"} — и он берёт
+    манифест именно за тот день.
+    """
+    dag_run = context.get("dag_run")
+    if dag_run and dag_run.conf and dag_run.conf.get("ds"):
+        ds = dag_run.conf["ds"]
+        logging.info(f"[resolve_ds] using ds from dag_run.conf: {ds}")
+        return ds
+
+    ds = context.get("ds") or context.get("logical_date", "").strftime("%Y-%m-%d")
+    logging.info(f"[resolve_ds] using ds from Airflow context: {ds}")
+    return ds
 
 def get_s3_client():
 
@@ -60,15 +79,13 @@ def build_vacancies_ids_manifest(ds, load_type, **context):
 
     return f"s3://{minio_bucket}/{object_key}"
 
-def guard_has_ids(ds: str, load_type: str, **context) -> None:
-    # ds приходит из op_kwargs — аналогично collect_vacancy_details.
-    # Исключение: когда details-DAG триггерится вручную через UI без conf,
-    # ds будет пустым — это правильное поведение, ValueError поймает такой случай явно.
-    if not ds:
-        raise ValueError("ds is empty — проверь op_kwargs в DAG-файле")
+def guard_has_ids(load_type: str, **context) -> None:
+    # Дата манифеста: conf["ds"] при ручном rerun, иначе обычный ds Airflow.
+    # Это единственное место, где нужен этот приоритет — дальше ds
+    # передаётся через XCom, чтобы все downstream-таски работали с той же датой.
+    ds = _resolve_ds(context)
 
     minio_bucket = os.getenv("MINIO_BUCKET")
-
     manifest_key = (
         f"bronze/hh/vacancies_ids/"
         f"load_type={load_type}/dt={ds}/part-000.jsonl"
@@ -92,3 +109,7 @@ def guard_has_ids(ds: str, load_type: str, **context) -> None:
 
         logging.error(f"Error while checking manifest existence: {e}")
         raise
+
+    # Пробрасываем разрешённую дату вниз по цепочке —
+    # чтобы collect и coverage работали с той же датой, что и guard.
+    context["ti"].xcom_push(key="resolved_ds", value=ds)

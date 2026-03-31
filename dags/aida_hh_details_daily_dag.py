@@ -30,31 +30,34 @@ with DAG(
         task_id="guard_has_ids",
         python_callable=guard_has_ids,
         op_kwargs={
-            "ds": "{{ ds }}",        # добавлено: Airflow разворачивает дату до вызова функции
+            # ds убран: функция читает дату сама через _resolve_ds(context)
             "load_type": "daily",
         },
     )
+
     collect_vacancy_details_task = PythonOperator(
         task_id="collect_vacancy_details",
         python_callable=collect_vacancy_details,
         op_kwargs={
-            "ds": "{{ ds }}",
+            # ds убран: функция берёт resolved_ds из XCom guard_has_ids
             "load_type": "daily",
             "batch_size": 200,
         },
     )
+
     build_details_coverage_report_task = PythonOperator(
         task_id="build_details_coverage_report",
         python_callable=build_details_coverage_report,
         op_kwargs={
+            # ds оставляем как fallback — функция сначала смотрит в XCom
             "ds": "{{ ds }}",
-            "load_type": "daily"
+            "load_type": "daily",
         },
     )
 
-    trigger_postgres_dag = TriggerDagRunOperator(
-        task_id="trigger_natalia_hh_postgres_dag",
-        trigger_dag_id="nataliia_hh_to_postgres", 
+    trigger_postgres_details_dag = TriggerDagRunOperator(
+        task_id="trigger_natalia_hh_postgres_details_dag",
+        trigger_dag_id="nataliia_hh_details_to_postgres", 
         reset_dag_run=True,
         wait_for_completion=True
     )
