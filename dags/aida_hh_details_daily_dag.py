@@ -52,9 +52,9 @@ with DAG(
         },
     )
 
-    trigger_postgres_details_dag = TriggerDagRunOperator(
-        task_id="trigger_natalia_hh_postgres_details_dag",
-        trigger_dag_id="nataliia_hh_details_to_postgres", 
+    trigger_postgres_dag = TriggerDagRunOperator(
+        task_id="trigger_natalia_hh_postgres_dag",
+        trigger_dag_id="nataliia_hh_to_postgres", 
         reset_dag_run=True,
         wait_for_completion=True
     )
@@ -68,4 +68,4 @@ with DAG(
     
 
 guard_has_ids_task >> collect_vacancy_details_task
-collect_vacancy_details_task >> build_details_coverage_report_task >> trigger_postgres_details_dag >> telegram_notify_task
+collect_vacancy_details_task >> build_details_coverage_report_task >> trigger_postgres_dag >> telegram_notify_task

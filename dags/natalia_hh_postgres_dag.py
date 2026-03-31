@@ -53,6 +53,13 @@ with DAG(
         python_callable=pg_utils.load_to_postgres
     )
 
+    trigger_postgres_details_dag = TriggerDagRunOperator(
+        task_id="trigger_natalia_hh_postgres_details_dag",
+        trigger_dag_id="nataliia_hh_details_to_postgres", 
+        reset_dag_run=True,
+        wait_for_completion=True
+    )
+
     telegram_notify_task = PythonOperator(
         task_id="send_telegram_notification",
         python_callable=pg_utils.send_telegram_notification,
@@ -60,4 +67,4 @@ with DAG(
         trigger_rule=TriggerRule.ALL_DONE,  
     )
 
-    init_postgres_tables_task >> check_new_files_task >> load_to_postgres_task >> telegram_notify_task
+    init_postgres_tables_task >> check_new_files_task >> load_to_postgres_task >> trigger_postgres_details_dag >> telegram_notify_task
