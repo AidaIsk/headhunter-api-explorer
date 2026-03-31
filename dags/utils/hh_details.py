@@ -329,6 +329,9 @@ def build_details_coverage_report(ds: str, load_type: str, **context) -> str:
             coverage_ds = ds
             logging.info(f"[coverage] using ds from Airflow context: {coverage_ds}")
 
+    minio_bucket = os.getenv("MINIO_BUCKET")
+    s3_client = get_s3_client()
+
     # --- 2. Загружаем manifest (expected)
     coverage_reason = "OK"
     expected_set = set()
