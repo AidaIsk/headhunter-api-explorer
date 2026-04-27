@@ -9,6 +9,7 @@ from botocore.exceptions import ClientError
 import boto3
 import requests
 
+from airflow.exceptions import AirflowSkipException
 
 BASE_URL = "https://api.hh.ru/vacancies"
 HEADERS = {"User-Agent": "hh-remote-track/0.1 (aida.aitymova@gmail.com)"}
