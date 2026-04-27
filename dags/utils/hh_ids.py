@@ -24,7 +24,7 @@ def _resolve_ds(context: dict) -> str:
         logging.info(f"[resolve_ds] using ds from dag_run.conf: {ds}")
         return ds
 
-    ds = context.get("ds") or context.get("logical_date", "").strftime("%Y-%m-%d")
+    ds = context["ds"]
     logging.info(f"[resolve_ds] using ds from Airflow context: {ds}")
     return ds
 
