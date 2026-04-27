@@ -11,10 +11,9 @@ from utils.hh_ids import guard_has_ids
 import utils.natalia_hh_postgres as pg_utils
 
 default_args = {
-    "owner" : "aida",
+    "owner": "aida",
     "retries": 1,
 }
-
 
 with DAG(
     dag_id="aida_hh_details_daily",
@@ -22,10 +21,10 @@ with DAG(
     start_date=datetime(2024, 1, 1),
     schedule_interval=None,
     catchup=False,
-    max_active_runs = 1,
+    max_active_runs=1,
     tags=["aida", "hh_details", "daily"],
 ) as dag:
-    
+
     guard_has_ids_task = PythonOperator(
         task_id="guard_has_ids",
         python_callable=guard_has_ids,
@@ -39,7 +38,7 @@ with DAG(
         task_id="collect_vacancy_details",
         python_callable=collect_vacancy_details,
         op_kwargs={
-            # ds убран: функция берёт resolved_ds из XCom guard_has_ids
+            # ds убран: функция берёт resolved_ds из XCom от guard_has_ids
             "load_type": "daily",
             "batch_size": 200,
         },
@@ -57,18 +56,25 @@ with DAG(
 
     trigger_postgres_details_dag = TriggerDagRunOperator(
         task_id="trigger_natalia_hh_postgres_details_dag",
-        trigger_dag_id="nataliia_hh_details_to_postgres", 
+        trigger_dag_id="nataliia_hh_details_to_postgres",
         reset_dag_run=True,
-        wait_for_completion=True
+        wait_for_completion=True,
     )
 
     telegram_notify_task = PythonOperator(
-        task_id='send_telegram_notification',
+        task_id="send_telegram_notification",
         python_callable=pg_utils.send_telegram_notification,
         op_kwargs={"watched_tasks": ["collect_vacancy_details", "build_details_coverage_report"]},
-        trigger_rule=TriggerRule.ALL_DONE
+        trigger_rule=TriggerRule.ALL_DONE,
     )
-    
 
-guard_has_ids_task >> collect_vacancy_details_task
-collect_vacancy_details_task >> build_details_coverage_report_task >> trigger_postgres_details_dag >> telegram_notify_task
+    # Зависимости внутри блока with DAG — иначе Airflow может их не подхватить.
+    # guard подключён к telegram: если он упадёт или уйдёт в SKIPPED,
+    # уведомление всё равно отправится благодаря TriggerRule.ALL_DONE.
+    (
+        guard_has_ids_task
+        >> collect_vacancy_details_task
+        >> build_details_coverage_report_task
+        >> trigger_postgres_details_dag
+        >> telegram_notify_task
+    )
